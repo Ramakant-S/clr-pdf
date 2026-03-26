@@ -7,6 +7,7 @@ import {
 import { normalizeClrDocument } from "@/lib/clr/normalize";
 import { transcriptEntryTypes } from "@/lib/clr/types";
 import type {
+  TranscriptLegendItem,
   TranscriptCustomization,
   TranscriptEntryType,
   TranscriptRecord,
@@ -31,6 +32,7 @@ export interface BulkGlobalSettings {
 export interface BulkImportRow {
   learnerId: string;
   studentNumber: string;
+  recordId: string;
   fullName: string;
   givenName: string;
   familyName: string;
@@ -68,9 +70,14 @@ export interface BulkImportRow {
   courseStatus: string;
   courseSummary: string;
   skillNames: string;
+  skillCodes: string;
+  skillFramework: string;
+  skillProficiencyLevels: string;
   instructorName: string;
   department: string;
   attendancePercent: string;
+  abbreviations: string;
+  proficiencyLegend: string;
   remarks: string;
 }
 
@@ -107,6 +114,25 @@ const CONTEXT_URLS = [
   "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
 ] as const;
 
+const defaultBulkProficiencyLegend: TranscriptLegendItem[] = [
+  {
+    label: "Beginning",
+    description: "Early-stage performance with guided participation and limited independent consistency.",
+  },
+  {
+    label: "Developing",
+    description: "Partial command of the skill with growing consistency and occasional support still helpful.",
+  },
+  {
+    label: "Proficient",
+    description: "Consistent independent performance at the expected standard across typical learning tasks.",
+  },
+  {
+    label: "Advanced",
+    description: "Performance exceeds the expected standard and transfers effectively to complex or unfamiliar contexts.",
+  },
+];
+
 export const defaultBulkGlobalSettings: BulkGlobalSettings = {
   institutionName: defaultTranscriptCustomization.institutionName,
   boardName: defaultTranscriptCustomization.boardName,
@@ -130,6 +156,12 @@ export const bulkImportColumns: BulkColumn[] = [
     key: "studentNumber",
     required: true,
     description: "Institution student number or admission number.",
+  },
+  {
+    key: "recordId",
+    required: false,
+    description:
+      "Learner-level transcript record ID shown on the printable transcript, for example #f3a91c5d-84e2-4f1d-b1f0-a7b3d9c1e842.",
   },
   {
     key: "fullName",
@@ -310,12 +342,30 @@ export const bulkImportColumns: BulkColumn[] = [
   {
     key: "courseSummary",
     required: false,
-    description: "Longer course summary or achievement narrative.",
+    description: "Short course or achievement summary shown in the transcript.",
   },
   {
     key: "skillNames",
     required: false,
     description: "Skill list separated with | for example Research | Coding | Writing.",
+  },
+  {
+    key: "skillCodes",
+    required: false,
+    description:
+      "Optional skill codes separated with | and aligned by position to skillNames.",
+  },
+  {
+    key: "skillFramework",
+    required: false,
+    description:
+      "Optional framework or competency model name applied to the listed skills.",
+  },
+  {
+    key: "skillProficiencyLevels",
+    required: false,
+    description:
+      "Optional proficiency levels separated with | and aligned by position to skillNames.",
   },
   {
     key: "instructorName",
@@ -333,6 +383,18 @@ export const bulkImportColumns: BulkColumn[] = [
     description: "Attendance percentage such as 96.",
   },
   {
+    key: "abbreviations",
+    required: false,
+    description:
+      "Transcript abbreviations as LABEL: Meaning pairs separated with |, for example CLR: Comprehensive Learner Record | OB: Open Badge.",
+  },
+  {
+    key: "proficiencyLegend",
+    required: false,
+    description:
+      "Proficiency scale as LABEL: Meaning pairs separated with |, repeated across learner rows when needed.",
+  },
+  {
     key: "remarks",
     required: false,
     description: "Optional course remarks or comments.",
@@ -342,6 +404,7 @@ export const bulkImportColumns: BulkColumn[] = [
 const emptyBulkImportRow: BulkImportRow = {
   learnerId: "",
   studentNumber: "",
+  recordId: "",
   fullName: "",
   givenName: "",
   familyName: "",
@@ -379,9 +442,14 @@ const emptyBulkImportRow: BulkImportRow = {
   courseStatus: "",
   courseSummary: "",
   skillNames: "",
+  skillCodes: "",
+  skillFramework: "",
+  skillProficiencyLevels: "",
   instructorName: "",
   department: "",
   attendancePercent: "",
+  abbreviations: "",
+  proficiencyLegend: "",
   remarks: "",
 };
 
@@ -416,6 +484,34 @@ function splitSkills(value: string) {
     .filter(Boolean);
 }
 
+function parseLegendPairs(value: string): TranscriptLegendItem[] {
+  return value
+    .split("|")
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
+      const [label, ...descriptionParts] = entry.split(":");
+      const nextLabel = label?.trim();
+      const nextDescription = descriptionParts.join(":").trim();
+
+      if (!nextLabel || !nextDescription) {
+        return undefined;
+      }
+
+      return {
+        label: nextLabel,
+        description: nextDescription,
+      } satisfies TranscriptLegendItem;
+    })
+    .filter((entry): entry is TranscriptLegendItem => Boolean(entry));
+}
+
+function serializeLegendPairs(entries: TranscriptLegendItem[]) {
+  return entries
+    .map((entry) => `${entry.label}: ${entry.description}`)
+    .join(" | ");
+}
+
 function formatEntryTypeToken(entryType: TranscriptEntryType) {
   return entryType
     .split(" ")
@@ -428,6 +524,18 @@ function slugify(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "") || "record";
+}
+
+function makeRecordId(seed: string) {
+  let hash = 2166136261;
+
+  for (const character of seed) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  const hex = (hash >>> 0).toString(16).padStart(8, "0");
+  return `#${hex.slice(0, 8)}-${hex.slice(0, 4)}-${hex.slice(4, 8)}-${hex.slice(0, 4)}-${hex}${hex.slice(0, 4)}`;
 }
 
 function toNumber(value: string) {
@@ -534,6 +642,12 @@ function mapRawRow(input: Record<string, unknown>) {
     row.learnerId = slugify(row.studentNumber);
   }
 
+  if (!row.recordId) {
+    row.recordId = makeRecordId(
+      row.learnerId || row.studentNumber || row.fullName || "learner-record",
+    );
+  }
+
   if (!row.verificationUrl && row.studentNumber) {
     row.verificationUrl = `https://bulk.import.local/clr/${slugify(row.studentNumber)}`;
   }
@@ -580,11 +694,43 @@ function buildProfileSummary(rows: BulkImportRow[]) {
   return `${rows[0]?.fullName ?? "Learner"} shows consistent achievement across ${skillPool.join(", ").toLowerCase()} and related credentialed work.`;
 }
 
+function getLegendEntries(
+  rows: BulkImportRow[],
+  selector: (row: BulkImportRow) => string,
+  fallback: TranscriptLegendItem[],
+) {
+  for (const row of rows) {
+    const parsed = parseLegendPairs(selector(row));
+    if (parsed.length > 0) {
+      return parsed;
+    }
+  }
+
+  return fallback;
+}
+
 function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings): JsonRecord {
   const primary = rows[0];
   const issuer = makeIssuer(settings);
+  const proficiencyLegendEntries = getLegendEntries(
+    rows,
+    (row) => row.proficiencyLegend,
+    defaultBulkProficiencyLegend,
+  );
+  const abbreviationEntries = getLegendEntries(rows, (row) => row.abbreviations, []);
+  const legendSections = [
+    abbreviationEntries.length > 0
+      ? `Abbreviations: ${serializeLegendPairs(abbreviationEntries)}`
+      : undefined,
+    proficiencyLegendEntries.length > 0
+      ? `Proficiency scale: ${serializeLegendPairs(proficiencyLegendEntries)}`
+      : undefined,
+  ].filter(Boolean);
   const verificationUrl =
     primary.verificationUrl || `${settings.institutionWebsite || "https://bulk.import.local"}/clr/${slugify(primary.studentNumber || primary.learnerId)}`;
+  const recordId =
+    primary.recordId ||
+    makeRecordId(primary.learnerId || primary.studentNumber || primary.fullName);
   const issuedOn =
     toIsoDate(
       [...rows]
@@ -597,6 +743,7 @@ function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings
   return {
     "@context": CONTEXT_URLS,
     id: verificationUrl,
+    identifier: recordId,
     type: ["VerifiableCredential", "ClrCredential"],
     name: (
       settings.reportingPeriodLabel || primary.reportingPeriod
@@ -605,6 +752,18 @@ function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings
     ),
     issuer,
     validFrom: issuedOn,
+    transcriptAbbreviations: abbreviationEntries,
+    proficiencyScale: proficiencyLegendEntries,
+    evidence:
+      legendSections.length > 0
+        ? [
+            {
+              type: ["Evidence"],
+              genre: "Legend",
+              narrative: legendSections.join("\n\n"),
+            },
+          ]
+        : undefined,
     credentialSubject: {
       id: `did:bulk:${slugify(primary.learnerId || primary.studentNumber || primary.fullName)}`,
       type: ["Learner"],
@@ -643,6 +802,64 @@ function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings
           row.courseTitle,
           row.courseSummary,
         );
+        const skillNames = splitSkills(row.skillNames);
+        const skillCodes = splitSkills(row.skillCodes);
+        const skillLevels = splitSkills(row.skillProficiencyLevels);
+        const skillAlignments = skillNames.map((skill, skillIndex) => ({
+          type: ["Alignment"],
+          targetName: skill,
+          targetCode: skillCodes[skillIndex] || undefined,
+          targetFramework: row.skillFramework || undefined,
+        }));
+        const rubricLevels = proficiencyLegendEntries.map((entry) => ({
+          id: `${baseCourseUrl}/rubric/${slugify(entry.label)}`,
+          type: ["RubricCriterionLevel"],
+          name: entry.label,
+          level: entry.label,
+          description: entry.description,
+        }));
+        const skillResultDescriptions = skillNames.map((skill, skillIndex) => ({
+          id: `${baseCourseUrl}/result-description/${skillIndex + 1}`,
+          type: ["ResultDescription"],
+          name: `${skill} proficiency`,
+          resultType: "RubricScore",
+          rubricCriterionLevel: rubricLevels,
+          alignment: [
+            {
+              type: ["Alignment"],
+              targetName: skill,
+              targetCode: skillCodes[skillIndex] || undefined,
+              targetFramework: row.skillFramework || undefined,
+            },
+          ],
+        }));
+        const skillResults = skillNames
+          .map((skill, skillIndex) => {
+            const levelLabel = skillLevels[skillIndex];
+            if (!levelLabel) {
+              return undefined;
+            }
+
+            const matchedRubricLevel = rubricLevels.find(
+              (level) => level.name.toLowerCase() === levelLabel.toLowerCase(),
+            );
+
+            return {
+              type: ["Result"],
+              resultDescription: `${baseCourseUrl}/result-description/${skillIndex + 1}`,
+              value: levelLabel,
+              rubricCriterionLevel: matchedRubricLevel?.id,
+              alignment: [
+                {
+                  type: ["Alignment"],
+                  targetName: skill,
+                  targetCode: skillCodes[skillIndex] || undefined,
+                  targetFramework: row.skillFramework || undefined,
+                },
+              ],
+            };
+          })
+          .filter(Boolean);
 
         return {
           id: baseCourseUrl,
@@ -669,9 +886,8 @@ function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings
               startDate: row.courseStartDate || undefined,
               endDate: row.courseEndDate || undefined,
               courseLevel: row.courseLevel || undefined,
-              alignment: splitSkills(row.skillNames).map((skill) => ({
-                targetName: skill,
-              })),
+              alignment: skillAlignments,
+              resultDescription: skillResultDescriptions,
               instructor: row.instructorName || undefined,
               department: row.department || undefined,
             },
@@ -706,6 +922,7 @@ function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings
                     value: row.remarks,
                   }
                 : undefined,
+              ...skillResults,
             ].filter(Boolean),
           },
         };
@@ -731,30 +948,165 @@ function compareLearnerGroups(left: BulkLearnerGroup, right: BulkLearnerGroup) {
   );
 }
 
-export function createSampleBulkRows(learnerCount = 50) {
-  const firstNames = [
-    "Aarav",
-    "Diya",
-    "Ishaan",
-    "Myra",
-    "Vivaan",
-    "Anaya",
-    "Kabir",
-    "Sana",
-    "Reyansh",
-    "Tara",
-  ];
-  const lastNames = [
-    "Sharma",
-    "Patel",
-    "Rao",
-    "Kapoor",
-    "Menon",
-    "Iyer",
-    "Khan",
-    "Singh",
-    "Das",
-    "Gupta",
+interface SampleLearnerProfile {
+  givenName: string;
+  familyName: string;
+  gender: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+  addressSuffix: string;
+  guardianName: string;
+  guardianEmailHandle: string;
+  phonePrefix: string;
+  guardianPhonePrefix: string;
+}
+
+const sampleLearnerCount = 10;
+
+export function createSampleBulkRows(learnerCount = sampleLearnerCount) {
+  const learnerProfiles: SampleLearnerProfile[] = [
+    {
+      givenName: "Amelia",
+      familyName: "Harrington",
+      gender: "Female",
+      city: "Boston",
+      state: "MA",
+      postalCode: "02116",
+      country: "US",
+      addressSuffix: "Beacon Street",
+      guardianName: "Claire Harrington",
+      guardianEmailHandle: "claire.harrington",
+      phonePrefix: "+1-617-555-",
+      guardianPhonePrefix: "+1-857-555-",
+    },
+    {
+      givenName: "Oliver",
+      familyName: "Whitmore",
+      gender: "Male",
+      city: "Chicago",
+      state: "IL",
+      postalCode: "60611",
+      country: "US",
+      addressSuffix: "Walton Avenue",
+      guardianName: "Daniel Whitmore",
+      guardianEmailHandle: "daniel.whitmore",
+      phonePrefix: "+1-312-555-",
+      guardianPhonePrefix: "+1-773-555-",
+    },
+    {
+      givenName: "Charlotte",
+      familyName: "Prescott",
+      gender: "Female",
+      city: "Seattle",
+      state: "WA",
+      postalCode: "98104",
+      country: "US",
+      addressSuffix: "Columbia Street",
+      guardianName: "Margaret Prescott",
+      guardianEmailHandle: "margaret.prescott",
+      phonePrefix: "+1-206-555-",
+      guardianPhonePrefix: "+1-425-555-",
+    },
+    {
+      givenName: "Henry",
+      familyName: "Fletcher",
+      gender: "Male",
+      city: "Denver",
+      state: "CO",
+      postalCode: "80205",
+      country: "US",
+      addressSuffix: "Wynkoop Street",
+      guardianName: "Edward Fletcher",
+      guardianEmailHandle: "edward.fletcher",
+      phonePrefix: "+1-303-555-",
+      guardianPhonePrefix: "+1-720-555-",
+    },
+    {
+      givenName: "Eleanor",
+      familyName: "Sinclair",
+      gender: "Female",
+      city: "London",
+      state: "Greater London",
+      postalCode: "SW1A 1AA",
+      country: "UK",
+      addressSuffix: "Kensington Lane",
+      guardianName: "Helen Sinclair",
+      guardianEmailHandle: "helen.sinclair",
+      phonePrefix: "+44-20-555-",
+      guardianPhonePrefix: "+44-77-555-",
+    },
+    {
+      givenName: "Theodore",
+      familyName: "Bennett",
+      gender: "Male",
+      city: "Manchester",
+      state: "Greater Manchester",
+      postalCode: "M2 5DB",
+      country: "UK",
+      addressSuffix: "Deansgate",
+      guardianName: "Richard Bennett",
+      guardianEmailHandle: "richard.bennett",
+      phonePrefix: "+44-16-1555-",
+      guardianPhonePrefix: "+44-75-555-",
+    },
+    {
+      givenName: "Lucy",
+      familyName: "Kensington",
+      gender: "Female",
+      city: "Edinburgh",
+      state: "Scotland",
+      postalCode: "EH2 2PF",
+      country: "UK",
+      addressSuffix: "George Street",
+      guardianName: "Emma Kensington",
+      guardianEmailHandle: "emma.kensington",
+      phonePrefix: "+44-13-1555-",
+      guardianPhonePrefix: "+44-78-555-",
+    },
+    {
+      givenName: "Samuel",
+      familyName: "Mercer",
+      gender: "Male",
+      city: "Dublin",
+      state: "Leinster",
+      postalCode: "D02 X285",
+      country: "IE",
+      addressSuffix: "Merrion Square",
+      guardianName: "Patrick Mercer",
+      guardianEmailHandle: "patrick.mercer",
+      phonePrefix: "+353-1-555-",
+      guardianPhonePrefix: "+353-85-555-",
+    },
+    {
+      givenName: "Sophie",
+      familyName: "Holloway",
+      gender: "Female",
+      city: "Bristol",
+      state: "England",
+      postalCode: "BS1 5TR",
+      country: "UK",
+      addressSuffix: "Queen Square",
+      guardianName: "Julia Holloway",
+      guardianEmailHandle: "julia.holloway",
+      phonePrefix: "+44-11-7555-",
+      guardianPhonePrefix: "+44-79-555-",
+    },
+    {
+      givenName: "William",
+      familyName: "Ashford",
+      gender: "Male",
+      city: "Amsterdam",
+      state: "North Holland",
+      postalCode: "1017 CP",
+      country: "NL",
+      addressSuffix: "Herengracht",
+      guardianName: "Thomas Ashford",
+      guardianEmailHandle: "thomas.ashford",
+      phonePrefix: "+31-20-555-",
+      guardianPhonePrefix: "+31-6-555-",
+    },
   ];
   const programs = [
     "Senior Secondary Diploma",
@@ -809,35 +1161,69 @@ export function createSampleBulkRows(learnerCount = 50) {
       summary: "Economic reasoning and civic policy review through case studies.",
     },
   ];
+  const proficiencyScaleLabels = defaultBulkProficiencyLegend.map(
+    (entry) => entry.label,
+  );
+  const sampleAbbreviations = serializeLegendPairs([
+    {
+      label: "CLR",
+      description: "Comprehensive Learner Record",
+    },
+    {
+      label: "OB",
+      description: "Open Badge",
+    },
+    {
+      label: "QR",
+      description: "Quick Response verification code",
+    },
+  ]);
+  const sampleProficiencyLegend = serializeLegendPairs(defaultBulkProficiencyLegend);
 
   const rows: BulkImportRow[] = [];
 
   for (let learnerIndex = 0; learnerIndex < learnerCount; learnerIndex += 1) {
-    const firstName = firstNames[learnerIndex % firstNames.length];
-    const lastName = lastNames[Math.floor(learnerIndex / firstNames.length) % lastNames.length];
-    const fullName = `${firstName} ${lastName}`;
+    const profile = learnerProfiles[learnerIndex % learnerProfiles.length];
+    const familyName = profile.familyName;
+    const fullName = `${profile.givenName} ${familyName}`;
     const learnerId = `learner-${String(learnerIndex + 1).padStart(3, "0")}`;
     const studentNumber = `CLR-${2026}${String(learnerIndex + 1).padStart(4, "0")}`;
     const homeroom = `${11 + (learnerIndex % 2)}-${String.fromCharCode(65 + (learnerIndex % 4))}`;
     const programName = programs[learnerIndex % programs.length];
     const gradeLevel = learnerIndex % 2 === 0 ? "Grade 11" : "Grade 12";
     const verificationUrl = `https://bulk.demo.example/clr/${slugify(studentNumber)}`;
+    const recordId = makeRecordId(studentNumber);
 
     for (let courseIndex = 0; courseIndex < courseCatalog.length; courseIndex += 1) {
       const course = courseCatalog[(learnerIndex + courseIndex) % courseCatalog.length];
       const grade = 74 + ((learnerIndex * 3 + courseIndex * 5) % 24);
       const credits = courseIndex === courseCatalog.length - 1 ? "0.5" : "1";
+      const skillNames = splitSkills(course.skills);
+      const skillCodes = skillNames.map(
+        (skill, skillIndex) =>
+          `${course.code}-SK${String(skillIndex + 1).padStart(2, "0")}-${slugify(skill)
+            .replace(/-/g, "")
+            .slice(0, 6)
+            .toUpperCase()}`,
+      );
+      const skillProficiencyLevels = skillNames.map(
+        (_, skillIndex) =>
+          proficiencyScaleLabels[
+            (learnerIndex + courseIndex + skillIndex) % proficiencyScaleLabels.length
+          ],
+      );
 
       rows.push({
         learnerId,
         studentNumber,
+        recordId,
         fullName,
-        givenName: firstName,
-        familyName: lastName,
+        givenName: profile.givenName,
+        familyName,
         email: `${slugify(fullName)}@sampleacademy.edu`,
-        phone: `+91-90000${String(learnerIndex + 1000).slice(-4)}`,
+        phone: `${profile.phonePrefix}${String(learnerIndex + 1000).slice(-4)}`,
         dateOfBirth: `200${7 + (learnerIndex % 2)}-${String((learnerIndex % 9) + 1).padStart(2, "0")}-${String((learnerIndex % 21) + 7).padStart(2, "0")}`,
-        gender: learnerIndex % 3 === 0 ? "Female" : learnerIndex % 3 === 1 ? "Male" : "Non-binary",
+        gender: profile.gender,
         gradeLevel,
         programName,
         homeroom,
@@ -845,14 +1231,14 @@ export function createSampleBulkRows(learnerCount = 50) {
         academicYear: "2025-2026",
         reportingPeriod: "Annual Result",
         learnerProfileSummary: "",
-        addressLine: `${15 + learnerIndex} Learning Avenue`,
-        city: "Bengaluru",
-        state: "Karnataka",
-        postalCode: `5600${String((learnerIndex % 90) + 10)}`,
-        country: "IN",
-        guardianName: `Guardian ${lastName}`,
-        guardianEmail: `guardian.${slugify(lastName)}${learnerIndex + 1}@samplemail.com`,
-        guardianPhone: `+91-98888${String(learnerIndex + 2000).slice(-4)}`,
+        addressLine: `${15 + learnerIndex} ${profile.addressSuffix}`,
+        city: profile.city,
+        state: profile.state,
+        postalCode: profile.postalCode,
+        country: profile.country,
+        guardianName: `${profile.guardianName.split(" ")[0]} ${familyName}`,
+        guardianEmail: `${profile.guardianEmailHandle}.${slugify(familyName)}${learnerIndex + 1}@samplemail.com`,
+        guardianPhone: `${profile.guardianPhonePrefix}${String(learnerIndex + 2000).slice(-4)}`,
         verificationUrl,
         credentialType: course.credentialType,
         courseCode: course.code,
@@ -868,9 +1254,14 @@ export function createSampleBulkRows(learnerCount = 50) {
         courseStatus: "Completed",
         courseSummary: course.summary,
         skillNames: course.skills,
-        instructorName: `${["Dr.", "Prof.", "Ms.", "Mr."][courseIndex % 4]} ${lastNames[(learnerIndex + courseIndex + 2) % lastNames.length]}`,
+        skillCodes: skillCodes.join(" | "),
+        skillFramework: "Institutional Competency Framework",
+        skillProficiencyLevels: skillProficiencyLevels.join(" | "),
+        instructorName: `${["Dr.", "Prof.", "Ms.", "Mr."][courseIndex % 4]} ${learnerProfiles[(learnerIndex + courseIndex + 2) % learnerProfiles.length].familyName}`,
         department: course.department,
         attendancePercent: String(91 + ((learnerIndex + courseIndex) % 8)),
+        abbreviations: sampleAbbreviations,
+        proficiencyLegend: sampleProficiencyLegend,
         remarks:
           grade >= 90
             ? "High distinction performance with strong evidence of mastery."
@@ -882,14 +1273,14 @@ export function createSampleBulkRows(learnerCount = 50) {
   return rows;
 }
 
-export function createSampleBulkCsv(learnerCount = 50) {
+export function createSampleBulkCsv(learnerCount = sampleLearnerCount) {
   const worksheet = XLSX.utils.json_to_sheet(
     createSampleBulkRows(learnerCount).map((row) => rowToObject(row)),
   );
   return XLSX.utils.sheet_to_csv(worksheet);
 }
 
-export function createSampleBulkWorkbook(learnerCount = 50) {
+export function createSampleBulkWorkbook(learnerCount = sampleLearnerCount) {
   const workbook = XLSX.utils.book_new();
   const importRows = createSampleBulkRows(learnerCount).map((row) => rowToObject(row));
   const importSheet = XLSX.utils.json_to_sheet(importRows);

@@ -26,6 +26,7 @@ const SETTINGS_STORAGE_KEY = "clr-bulk-global-settings";
 const csvMimeType = "text/csv;charset=utf-8;";
 const workbookMimeType =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+const sampleLearnerCount = 10;
 
 type GenerationStatus = "idle" | "running" | "completed" | "stopped";
 
@@ -46,6 +47,29 @@ interface GenerationProgress {
   total: number;
   currentLearner: string;
 }
+
+type ExportTask =
+  | "idle"
+  | "selected-pdf"
+  | "record-pdf"
+  | "all-pdfs"
+  | "all-clr";
+
+interface ExportProgress {
+  task: ExportTask;
+  completed: number;
+  total: number;
+  currentLearner: string;
+  label: string;
+}
+
+const idleExportProgress: ExportProgress = {
+  task: "idle",
+  completed: 0,
+  total: 0,
+  currentLearner: "",
+  label: "",
+};
 
 function makeSlug(value: string) {
   return (
@@ -137,7 +161,9 @@ export function BulkTranscriptStudio() {
   const [settings, setSettings] = useState<BulkGlobalSettings>(
     defaultBulkGlobalSettings,
   );
-  const [sourceRows, setSourceRows] = useState(() => createSampleBulkRows(50));
+  const [sourceRows, setSourceRows] = useState(() =>
+    createSampleBulkRows(sampleLearnerCount),
+  );
   const [sourceRevision, setSourceRevision] = useState(1);
   const [settingsRevision, setSettingsRevision] = useState(1);
   const [selectedLearnerId, setSelectedLearnerId] = useState("");
@@ -146,7 +172,7 @@ export function BulkTranscriptStudio() {
   const [errorMessage, setErrorMessage] = useState("");
   const [busyMessage, setBusyMessage] = useState("");
   const [hasLoadedSettings, setHasLoadedSettings] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showInstitutionDefaults, setShowInstitutionDefaults] = useState(false);
   const [generationStatus, setGenerationStatus] =
     useState<GenerationStatus>("idle");
   const [generationProgress, setGenerationProgress] = useState<GenerationProgress>(
@@ -156,6 +182,8 @@ export function BulkTranscriptStudio() {
       currentLearner: "",
     },
   );
+  const [exportProgress, setExportProgress] =
+    useState<ExportProgress>(idleExportProgress);
   const [generatedSession, setGeneratedSession] = useState<GeneratedSession | null>(
     null,
   );
@@ -188,8 +216,28 @@ export function BulkTranscriptStudio() {
     generatedSession != null &&
     (generatedSession.sourceRevision !== sourceRevision ||
       generatedSession.settingsRevision !== settingsRevision);
+  const isExporting = exportProgress.task !== "idle";
   const canDownloadOutputs =
-    hasGeneratedOutput && !outputIsStale && generationStatus !== "running";
+    hasGeneratedOutput &&
+    !outputIsStale &&
+    generationStatus !== "running" &&
+    !isExporting;
+  const statusTitle =
+    generationStatus === "running"
+      ? `Generating ${generationProgress.completed} of ${generationProgress.total}`
+      : generationStatus === "completed"
+        ? "Generated Transcripts Ready"
+        : generationStatus === "stopped"
+          ? "Generation Stopped"
+          : "Setup Your Batch";
+  const statusDescription =
+    generationStatus === "running"
+      ? `Currently preparing ${generationProgress.currentLearner || "learner records"}.`
+      : outputIsStale && generatedSession
+        ? `Template or global settings changed after generation. Preview still shows the last generated ${templateName(generatedSession.settings.template)} batch until you regenerate.`
+        : hasGeneratedOutput && generatedSession
+          ? `Preview and downloads are using the generated ${templateName(generatedSession.settings.template)} batch.`
+          : "Upload data, select a template, then generate the batch to lock the output for preview and downloads.";
 
   useEffect(() => {
     const savedSettings = window.localStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -261,7 +309,14 @@ export function BulkTranscriptStudio() {
       total: 0,
       currentLearner: "",
     });
+    setExportProgress(idleExportProgress);
     setBusyMessage(nextMessage);
+  }
+
+  async function waitForUiFrame() {
+    await new Promise<void>((resolve) => {
+      window.requestAnimationFrame(() => resolve());
+    });
   }
 
   async function handleWorkbookUpload(
@@ -300,7 +355,7 @@ export function BulkTranscriptStudio() {
   }
 
   function handleLoadSampleData() {
-    const sampleRows = createSampleBulkRows(50);
+    const sampleRows = createSampleBulkRows(sampleLearnerCount);
     startTransition(() => {
       setSourceRows(sampleRows);
       setWarnings([]);
@@ -309,20 +364,22 @@ export function BulkTranscriptStudio() {
     });
     setErrorMessage("");
     resetGeneratedOutput(
-      "Loaded 50 sample learners. Choose a template and click Generate All Transcripts.",
+      `Loaded ${sampleLearnerCount} sample learners. Choose a template and click Generate All Transcripts.`,
     );
   }
 
   function handleDownloadCsvTemplate() {
     downloadBlob(
-      new Blob([createSampleBulkCsv(50)], { type: csvMimeType }),
+      new Blob([createSampleBulkCsv(sampleLearnerCount)], { type: csvMimeType }),
       "bulk-clr-import-sample.csv",
     );
   }
 
   function handleDownloadExcelTemplate() {
     downloadBlob(
-      new Blob([createSampleBulkWorkbook(50)], { type: workbookMimeType }),
+      new Blob([createSampleBulkWorkbook(sampleLearnerCount)], {
+        type: workbookMimeType,
+      }),
       "bulk-clr-import-template.xlsx",
     );
   }
@@ -419,14 +476,27 @@ export function BulkTranscriptStudio() {
     }
 
     try {
+      setExportProgress({
+        task: "selected-pdf",
+        completed: 1,
+        total: 1,
+        currentLearner: selectedRecord.learnerName,
+        label: "Preparing preview PDF",
+      });
+      setBusyMessage(`Rendering transcript for ${selectedRecord.learnerName}...`);
+      await waitForUiFrame();
       await downloadTranscriptPdf(
         previewRef.current,
         makeTranscriptFilename(selectedRecord),
       );
+      setBusyMessage(`Downloaded transcript for ${selectedRecord.learnerName}.`);
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : "The transcript PDF could not be created.",
       );
+      setBusyMessage("");
+    } finally {
+      setExportProgress(idleExportProgress);
     }
   }
 
@@ -446,9 +516,8 @@ export function BulkTranscriptStudio() {
       setBatchPreviewState({ record, settings: sessionSettings });
     });
 
-    await new Promise<void>((resolve) => {
-      window.requestAnimationFrame(() => resolve());
-    });
+    await waitForUiFrame();
+    await waitForUiFrame();
 
     if (!batchPreviewRef.current) {
       throw new Error("The hidden transcript renderer is not ready.");
@@ -463,7 +532,15 @@ export function BulkTranscriptStudio() {
     }
 
     try {
+      setExportProgress({
+        task: "record-pdf",
+        completed: 1,
+        total: 1,
+        currentLearner: record.learnerName,
+        label: "Preparing learner PDF",
+      });
       setBusyMessage(`Rendering transcript for ${record.learnerName}...`);
+      await waitForUiFrame();
       const pdfBlob = await renderPdfForRecord(record, generatedSession.settings);
       downloadBlob(pdfBlob, makeTranscriptFilename(record));
       setBusyMessage(`Downloaded transcript for ${record.learnerName}.`);
@@ -474,6 +551,7 @@ export function BulkTranscriptStudio() {
       setBusyMessage("");
     } finally {
       setBatchPreviewState(null);
+      setExportProgress(idleExportProgress);
     }
   }
 
@@ -482,17 +560,43 @@ export function BulkTranscriptStudio() {
       return;
     }
 
+    setExportProgress({
+      task: "all-clr",
+      completed: 0,
+      total: generatedSession.records.length,
+      currentLearner: "",
+      label: "Packaging CLR archive",
+    });
     setBusyMessage(`Packaging ${generatedSession.records.length} CLR JSON files...`);
     setErrorMessage("");
 
     try {
       const zip = new JSZip();
 
-      for (const record of generatedSession.records) {
+      for (const [index, record] of generatedSession.records.entries()) {
+        setExportProgress({
+          task: "all-clr",
+          completed: index + 1,
+          total: generatedSession.records.length,
+          currentLearner: record.learnerName,
+          label: "Adding CLR files",
+        });
         zip.file(makeClrFilename(record), JSON.stringify(record.clr, null, 2));
+        await waitForUiFrame();
       }
 
-      const archive = await zip.generateAsync({ type: "blob" });
+      const archive = await zip.generateAsync(
+        { type: "blob" },
+        (metadata) => {
+          setExportProgress({
+            task: "all-clr",
+            completed: generatedSession.records.length,
+            total: generatedSession.records.length,
+            currentLearner: "",
+            label: `Finalizing archive ${Math.round(metadata.percent)}%`,
+          });
+        },
+      );
       downloadBlob(
         archive,
         `bulk-clr-json-${generatedSession.records.length}-learners.zip`,
@@ -505,6 +609,8 @@ export function BulkTranscriptStudio() {
         error instanceof Error ? error.message : "The CLR archive could not be generated.",
       );
       setBusyMessage("");
+    } finally {
+      setExportProgress(idleExportProgress);
     }
   }
 
@@ -519,14 +625,33 @@ export function BulkTranscriptStudio() {
       const zip = new JSZip();
 
       for (const [index, record] of generatedSession.records.entries()) {
+        setExportProgress({
+          task: "all-pdfs",
+          completed: index + 1,
+          total: generatedSession.records.length,
+          currentLearner: record.learnerName,
+          label: "Rendering learner PDFs",
+        });
         setBusyMessage(
           `Rendering transcript ${index + 1} of ${generatedSession.records.length}: ${record.learnerName}`,
         );
+        await waitForUiFrame();
         const pdfBlob = await renderPdfForRecord(record, generatedSession.settings);
         zip.file(makeTranscriptFilename(record), pdfBlob);
       }
 
-      const archive = await zip.generateAsync({ type: "blob" });
+      const archive = await zip.generateAsync(
+        { type: "blob" },
+        (metadata) => {
+          setExportProgress({
+            task: "all-pdfs",
+            completed: generatedSession.records.length,
+            total: generatedSession.records.length,
+            currentLearner: "",
+            label: `Finalizing PDF archive ${Math.round(metadata.percent)}%`,
+          });
+        },
+      );
       downloadBlob(
         archive,
         `bulk-transcripts-${generatedSession.records.length}-learners.zip`,
@@ -541,251 +666,192 @@ export function BulkTranscriptStudio() {
       setBusyMessage("");
     } finally {
       setBatchPreviewState(null);
+      setExportProgress(idleExportProgress);
     }
   }
 
   return (
     <main className={styles.shell}>
-      <button
-        type="button"
-        className={`${styles.sidebarToggle} ${isSidebarOpen ? styles.sidebarToggleActive : ""}`}
-        onClick={() => setIsSidebarOpen((current) => !current)}
-        aria-label={isSidebarOpen ? "Hide controls" : "Show controls"}
-        aria-expanded={isSidebarOpen}
-        data-no-print
-      >
-        <span
-          className={`${styles.sidebarToggleIcon} ${isSidebarOpen ? styles.sidebarToggleIconClose : ""}`}
-          aria-hidden="true"
-        >
-          <span />
-          <span />
-          <span />
-        </span>
-      </button>
-
-      <div
-        className={`${styles.sidebarBackdrop} ${isSidebarOpen ? styles.sidebarBackdropVisible : ""}`}
-        onClick={() => setIsSidebarOpen(false)}
-        data-no-print
-      />
-
-      <aside
-        className={`${styles.panel} ${isSidebarOpen ? styles.panelOpen : ""}`}
-        data-no-print
-      >
-        <div className={styles.panelTopBar}>
-          <StudioSwitcher />
-        </div>
-
-        <div className={styles.section}>
-          <span className={styles.eyebrow}>Bulk CLR and Transcript Studio</span>
-          <h1 className={styles.title}>Spreadsheet to CLR JSON and bulk transcripts</h1>
-          <p className={styles.lede}>
-            Upload a CSV or Excel workbook with one row per learner credential or achievement entry.
-            Select a transcript template, then generate the full batch before
-            previewing or downloading outputs.
-          </p>
-        </div>
-
-        <div className={styles.section}>
-          <span className={styles.sectionTitle}>Template Files</span>
-          <p className={styles.hint}>
-            The import format is flat: repeat learner details on every credential
-            row. Download the sample CSV or Excel workbook to see the exact
-            columns and a 50-learner dataset.
-          </p>
-          <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.primaryAction}
-              onClick={handleDownloadExcelTemplate}
-            >
-              Download Excel Template
-            </button>
-            <button
-              type="button"
-              className={styles.secondaryAction}
-              onClick={handleDownloadCsvTemplate}
-            >
-              Download CSV Sample
-            </button>
-          </div>
-          <div className={styles.actions}>
-            <label className={styles.uploadAction}>
-              <input
-                type="file"
-                accept=".xlsx,.xls,.csv"
-                className={styles.hiddenInput}
-                onChange={(event) => void handleWorkbookUpload(event)}
-              />
-              Upload CSV or Excel
-            </label>
-            <button
-              type="button"
-              className={styles.ghostAction}
-              onClick={handleLoadSampleData}
-            >
-              Reload Sample Data
-            </button>
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <span className={styles.sectionTitle}>Global Settings</span>
-          <div className={styles.fieldGrid}>
-            <div className={styles.field}>
-              <label htmlFor="bulk-institution-name">Institution Name</label>
-              <input
-                id="bulk-institution-name"
-                className={styles.input}
-                value={settings.institutionName}
-                onChange={(event) =>
-                  updateSetting("institutionName", event.target.value)
-                }
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="bulk-seal-text">Seal Text</label>
-              <input
-                id="bulk-seal-text"
-                className={styles.input}
-                value={settings.sealText}
-                onChange={(event) => updateSetting("sealText", event.target.value)}
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="bulk-board-name">Board / Authority</label>
-              <input
-                id="bulk-board-name"
-                className={styles.input}
-                value={settings.boardName}
-                onChange={(event) => updateSetting("boardName", event.target.value)}
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="bulk-website">Website or Email</label>
-              <input
-                id="bulk-website"
-                className={styles.input}
-                value={settings.institutionWebsite}
-                onChange={(event) =>
-                  updateSetting("institutionWebsite", event.target.value)
-                }
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="bulk-address">Institution Address</label>
-              <input
-                id="bulk-address"
-                className={styles.input}
-                value={settings.institutionAddress}
-                onChange={(event) =>
-                  updateSetting("institutionAddress", event.target.value)
-                }
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="bulk-period">Reporting Period</label>
-              <input
-                id="bulk-period"
-                className={styles.input}
-                value={settings.reportingPeriodLabel}
-                onChange={(event) =>
-                  updateSetting("reportingPeriodLabel", event.target.value)
-                }
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="bulk-principal">Principal / Dean</label>
-              <input
-                id="bulk-principal"
-                className={styles.input}
-                value={settings.principalName}
-                onChange={(event) =>
-                  updateSetting("principalName", event.target.value)
-                }
-              />
-            </div>
-            <div className={styles.field}>
-              <label htmlFor="bulk-registrar">Registrar</label>
-              <input
-                id="bulk-registrar"
-                className={styles.input}
-                value={settings.registrarName}
-                onChange={(event) =>
-                  updateSetting("registrarName", event.target.value)
-                }
-              />
-            </div>
-          </div>
-
-          <div className={styles.field}>
-            <label htmlFor="bulk-footer">Global Footer</label>
-            <textarea
-              id="bulk-footer"
-              className={styles.textarea}
-              value={settings.footerText}
-              onChange={(event) => updateSetting("footerText", event.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <span className={styles.sectionTitle}>Transcript Templates</span>
-          <p className={styles.hint}>
-            Template selection is also available in the main workspace for faster switching while reviewing learners.
-          </p>
-          <div className={styles.templateGrid}>
-            {transcriptTemplateOptions.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className={`${styles.templateCard} ${settings.template === option.id ? styles.templateActive : ""}`}
-                onClick={() => updateSetting("template", option.id)}
-              >
-                <strong>{option.name}</strong>
-                <span>{option.description}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <span className={styles.sectionTitle}>Generation</span>
-          <div className={styles.actions}>
-            <button
-              type="button"
-              className={styles.primaryAction}
-              onClick={() => void handleGenerateAll()}
-              disabled={generationStatus === "running"}
-            >
-              {hasGeneratedOutput ? "Regenerate All Transcripts" : "Generate All Transcripts"}
-            </button>
-            <button
-              type="button"
-              className={styles.ghostAction}
-              onClick={handleStopGeneration}
-              disabled={generationStatus !== "running"}
-            >
-              Stop Generation
-            </button>
-          </div>
-        </div>
-
-        {errorMessage ? (
-          <div className={`${styles.status} ${styles.statusError}`}>
-            {errorMessage}
-          </div>
-        ) : (
-          <div className={`${styles.status} ${styles.statusInfo}`}>
-            {busyMessage ||
-              "Imported data and template edits stay in draft mode until you generate the batch."}
-          </div>
-        )}
-      </aside>
-
       <section className={styles.workspace}>
+        <section className={styles.panel} data-no-print>
+          <div className={styles.panelTopBar}>
+            <StudioSwitcher />
+          </div>
+
+          <div className={styles.section}>
+            <span className={styles.eyebrow}>Advanced Batch Settings</span>
+            <h2 className={styles.title}>Institution and transcript defaults</h2>
+            <p className={styles.lede}>
+              These values apply to every learner in the batch. Upload, template selection, and generation stay in the workflow steps below.
+            </p>
+          </div>
+
+          <div className={styles.section}>
+            <div className={styles.collapsibleHeader}>
+              <span className={styles.sectionTitle}>Global Settings</span>
+              <button
+                type="button"
+                className={styles.sectionToggle}
+                onClick={() =>
+                  setShowInstitutionDefaults((current) => !current)
+                }
+                aria-label={
+                  showInstitutionDefaults
+                    ? "Hide institution defaults"
+                    : "Show institution defaults"
+                }
+                aria-expanded={showInstitutionDefaults}
+              >
+                <span
+                  className={`${styles.sectionToggleIcon} ${showInstitutionDefaults ? styles.sectionToggleIconOpen : ""}`}
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <p className={styles.hint}>
+              Hidden by default to keep more space for the workflow and transcript review area.
+            </p>
+
+            {showInstitutionDefaults ? (
+              <>
+                <div className={styles.fieldGrid}>
+                  <div className={styles.field}>
+                    <label htmlFor="bulk-institution-name">Institution Name</label>
+                    <input
+                      id="bulk-institution-name"
+                      className={styles.input}
+                      value={settings.institutionName}
+                      onChange={(event) =>
+                        updateSetting("institutionName", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="bulk-seal-text">Seal Text</label>
+                    <input
+                      id="bulk-seal-text"
+                      className={styles.input}
+                      value={settings.sealText}
+                      onChange={(event) =>
+                        updateSetting("sealText", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="bulk-board-name">Board / Authority</label>
+                    <input
+                      id="bulk-board-name"
+                      className={styles.input}
+                      value={settings.boardName}
+                      onChange={(event) =>
+                        updateSetting("boardName", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="bulk-website">Website or Email</label>
+                    <input
+                      id="bulk-website"
+                      className={styles.input}
+                      value={settings.institutionWebsite}
+                      onChange={(event) =>
+                        updateSetting("institutionWebsite", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="bulk-address">Institution Address</label>
+                    <input
+                      id="bulk-address"
+                      className={styles.input}
+                      value={settings.institutionAddress}
+                      onChange={(event) =>
+                        updateSetting("institutionAddress", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="bulk-period">Reporting Period</label>
+                    <input
+                      id="bulk-period"
+                      className={styles.input}
+                      value={settings.reportingPeriodLabel}
+                      onChange={(event) =>
+                        updateSetting("reportingPeriodLabel", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="bulk-principal">Principal / Dean</label>
+                    <input
+                      id="bulk-principal"
+                      className={styles.input}
+                      value={settings.principalName}
+                      onChange={(event) =>
+                        updateSetting("principalName", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label htmlFor="bulk-registrar">Registrar</label>
+                    <input
+                      id="bulk-registrar"
+                      className={styles.input}
+                      value={settings.registrarName}
+                      onChange={(event) =>
+                        updateSetting("registrarName", event.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className={styles.field}>
+                  <label htmlFor="bulk-footer">Global Footer</label>
+                  <textarea
+                    id="bulk-footer"
+                    className={styles.textarea}
+                    value={settings.footerText}
+                    onChange={(event) =>
+                      updateSetting("footerText", event.target.value)
+                    }
+                  />
+                </div>
+              </>
+            ) : null}
+          </div>
+
+          <div className={styles.section}>
+            <span className={styles.sectionTitle}>Current Batch</span>
+            <p className={styles.hint}>
+              {importedGroups.length} learners loaded from {sourceLabel}. Selected template:{" "}
+              {templateName(settings.template)}.
+            </p>
+          </div>
+
+          {errorMessage ? (
+            <div className={`${styles.status} ${styles.statusError}`}>
+              {errorMessage}
+            </div>
+          ) : (
+            <div className={`${styles.status} ${styles.statusInfo}`}>
+              {busyMessage ||
+                "Imported data and template edits stay in draft mode until you generate the batch."}
+            </div>
+          )}
+        </section>
+
+        <section className={styles.workspaceIntro} data-no-print>
+          <div>
+            <p className={styles.toolbarLabel}>Bulk CLR and Transcript Studio</p>
+            <h1 className={styles.workspaceTitle}>
+              Upload data, choose a design, then generate the full transcript batch
+            </h1>
+          </div>
+          <p className={styles.workspaceHint}>
+            The setup stays at the top. Once the batch is generated, use the learner rail on the left and the larger transcript preview on the right to review outputs before downloading.
+          </p>
+        </section>
+
         <section className={styles.workflowGrid} data-no-print>
           <article className={styles.workflowCard}>
             <div className={styles.workflowHeader}>
@@ -867,93 +933,119 @@ export function BulkTranscriptStudio() {
               ))}
             </div>
           </article>
+
+          <article
+            className={`${styles.workflowCard} ${styles.workflowCardFull}`}
+          >
+            <div className={styles.workflowHeader}>
+              <div>
+                <p className={styles.toolbarLabel}>Step 3</p>
+                <h2 className={styles.panelTitle}>Generate and Review Batch</h2>
+              </div>
+              <p className={styles.panelMeta}>
+                Generate after upload and template selection. If you adjust the design or global defaults later, regenerate to refresh preview and downloads.
+              </p>
+            </div>
+
+            <div className={styles.generateGrid}>
+              <div className={styles.generateStatusCard}>
+                <p className={styles.toolbarLabel}>Batch Status</p>
+                <h3 className={styles.toolbarTitle}>{statusTitle}</h3>
+                <p className={styles.toolbarMeta}>{statusDescription}</p>
+                <div className={styles.workflowMeta}>
+                  <strong>{importedGroups.length} learners ready</strong>
+                  <span>
+                    {sourceRows.length} credential rows | {warnings.length} warnings
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.generateActionsCard}>
+                <div className={styles.toolbarActions}>
+                  <button
+                    type="button"
+                    className={styles.primaryAction}
+                    onClick={() => void handleGenerateAll()}
+                    disabled={generationStatus === "running"}
+                  >
+                    {hasGeneratedOutput
+                      ? "Regenerate All Transcripts"
+                      : "Generate All Transcripts"}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.ghostAction}
+                    onClick={handleStopGeneration}
+                    disabled={generationStatus !== "running"}
+                  >
+                    Stop
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.primaryAction}
+                    onClick={() => void handleDownloadAllPdfs()}
+                    disabled={!canDownloadOutputs}
+                  >
+                    <span className={styles.actionContent}>
+                      {exportProgress.task === "all-pdfs" ? (
+                        <span className={styles.loaderDot} aria-hidden="true" />
+                      ) : null}
+                      {exportProgress.task === "all-pdfs"
+                        ? "Preparing PDFs"
+                        : "Download All PDFs"}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.secondaryAction}
+                    onClick={() => void handleDownloadAllClr()}
+                    disabled={!canDownloadOutputs}
+                  >
+                    <span className={styles.actionContent}>
+                      {exportProgress.task === "all-clr" ? (
+                        <span className={styles.loaderDot} aria-hidden="true" />
+                      ) : null}
+                      {exportProgress.task === "all-clr"
+                        ? "Preparing JSON"
+                        : "Download All CLR JSON"}
+                    </span>
+                  </button>
+                </div>
+                {isExporting ? (
+                  <div className={styles.exportStatus} aria-live="polite">
+                    <div className={styles.exportStatusHeader}>
+                      <span className={styles.loaderDot} aria-hidden="true" />
+                      <strong>{exportProgress.label}</strong>
+                      <span>
+                        {exportProgress.total > 0
+                          ? `${Math.min(exportProgress.completed, exportProgress.total)} / ${exportProgress.total}`
+                          : "Starting"}
+                      </span>
+                    </div>
+                    <p className={styles.exportStatusText}>
+                      {exportProgress.currentLearner || "Keeping the download batch in sync with the preview design."}
+                    </p>
+                    {exportProgress.total > 0 ? (
+                      <div className={styles.exportProgressTrack} aria-hidden="true">
+                        <span
+                          className={styles.exportProgressFill}
+                          style={{
+                            width: `${Math.max(
+                              6,
+                              (Math.min(exportProgress.completed, exportProgress.total) /
+                                exportProgress.total) *
+                                100,
+                            )}%`,
+                          }}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </article>
         </section>
-
-        <div className={styles.toolbar} data-no-print>
-          <div>
-            <p className={styles.toolbarLabel}>Generation Status</p>
-            <h2 className={styles.toolbarTitle}>
-              {generationStatus === "running"
-                ? `Generating ${generationProgress.completed} of ${generationProgress.total}`
-                : generationStatus === "completed"
-                  ? "Ready to Preview and Download"
-                  : generationStatus === "stopped"
-                    ? "Generation Stopped"
-                    : "Draft Batch"}
-            </h2>
-            <p className={styles.toolbarMeta}>
-              {generationStatus === "running"
-                ? `Currently preparing ${generationProgress.currentLearner || "learner records"}`
-                : outputIsStale && generatedSession
-                  ? `Template or settings changed after generation. Preview still shows ${templateName(generatedSession.settings.template)} until you regenerate.`
-                  : hasGeneratedOutput && generatedSession
-                    ? `Preview is showing the last generated ${templateName(generatedSession.settings.template)} template batch.`
-                    : "Load data, choose a template, and generate the batch before previewing transcripts."}
-            </p>
-          </div>
-
-          <div className={styles.toolbarActions}>
-            <button
-              type="button"
-              className={styles.secondaryAction}
-              onClick={() => void handleGenerateAll()}
-              disabled={generationStatus === "running"}
-            >
-              {hasGeneratedOutput ? "Regenerate" : "Generate"}
-            </button>
-            <button
-              type="button"
-              className={styles.ghostAction}
-              onClick={handleStopGeneration}
-              disabled={generationStatus !== "running"}
-            >
-              Stop
-            </button>
-            <button
-              type="button"
-              className={styles.primaryAction}
-              onClick={() => void handleDownloadAllPdfs()}
-              disabled={!canDownloadOutputs}
-            >
-              Download All PDFs
-            </button>
-            <button
-              type="button"
-              className={styles.secondaryAction}
-              onClick={() => void handleDownloadAllClr()}
-              disabled={!canDownloadOutputs}
-            >
-              Download All CLR JSON
-            </button>
-          </div>
-        </div>
-
-        <div className={styles.summaryGrid} data-no-print>
-          <article className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Imported Learners</span>
-            <strong>{importedGroups.length}</strong>
-            <p>{sourceLabel}</p>
-          </article>
-          <article className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Credential Rows</span>
-            <strong>{sourceRows.length}</strong>
-            <p>Flat import rows repeated per learner credential entry.</p>
-          </article>
-          <article className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Generated Batch</span>
-            <strong>{generatedRecords?.length ?? 0}</strong>
-            <p>
-              {generatedSession
-                ? `${templateName(generatedSession.settings.template)} template`
-                : "No generated output yet"}
-            </p>
-          </article>
-          <article className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Warnings</span>
-            <strong>{warnings.length}</strong>
-            <p>Validation messages from the latest spreadsheet upload.</p>
-          </article>
-        </div>
 
         {outputIsStale ? (
           <div className={styles.noticePanel} data-no-print>
@@ -962,6 +1054,25 @@ export function BulkTranscriptStudio() {
             and downloads.
           </div>
         ) : null}
+
+        <div className={styles.resultsHeader} data-no-print>
+          <div>
+            <p className={styles.toolbarLabel}>Generated Workspace</p>
+            <h2 className={styles.panelTitle}>
+              {hasGeneratedOutput ? "Generated Transcripts" : "Draft Transcript Preview"}
+            </h2>
+            <p className={styles.panelMeta}>
+              {hasGeneratedOutput
+                ? "Use the learner rail on the left to switch between generated transcripts."
+                : "Use the learner rail on the left to inspect the selected design before generation."}
+            </p>
+          </div>
+          <div className={styles.resultsMeta}>
+            <span>{hasGeneratedOutput ? generatedRecords?.length ?? 0 : importedGroups.length} learners</span>
+            <span>{sourceRows.length} entries</span>
+            <span>{templateName(generatedSession?.settings.template ?? settings.template)}</span>
+          </div>
+        </div>
 
         <div className={styles.contentGrid}>
           <section className={styles.listPanel} data-no-print>
@@ -1010,13 +1121,22 @@ export function BulkTranscriptStudio() {
                       >
                         CLR
                       </button>
-                      <button
-                        type="button"
-                        className={styles.inlineAction}
-                        onClick={() => void handleDownloadRecordPdf(record)}
-                        disabled={!canDownloadOutputs}
-                      >
-                        PDF
+                    <button
+                      type="button"
+                      className={styles.inlineAction}
+                      onClick={() => void handleDownloadRecordPdf(record)}
+                      disabled={!canDownloadOutputs}
+                    >
+                        <span className={styles.actionContent}>
+                          {exportProgress.task === "record-pdf" &&
+                          exportProgress.currentLearner === record.learnerName ? (
+                            <span className={styles.loaderDot} aria-hidden="true" />
+                          ) : null}
+                          {exportProgress.task === "record-pdf" &&
+                          exportProgress.currentLearner === record.learnerName
+                            ? "Preparing"
+                            : "PDF"}
+                        </span>
                       </button>
                     </div>
                   </article>
@@ -1104,7 +1224,14 @@ export function BulkTranscriptStudio() {
                       onClick={() => void handleDownloadSelectedPdf()}
                       disabled={!canDownloadOutputs}
                     >
-                      Download Transcript
+                      <span className={styles.actionContent}>
+                        {exportProgress.task === "selected-pdf" ? (
+                          <span className={styles.loaderDot} aria-hidden="true" />
+                        ) : null}
+                        {exportProgress.task === "selected-pdf"
+                          ? "Preparing PDF"
+                          : "Download Transcript"}
+                      </span>
                     </button>
                     <button
                       type="button"

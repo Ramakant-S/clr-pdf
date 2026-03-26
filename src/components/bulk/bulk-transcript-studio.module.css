@@ -1,101 +1,14 @@
 .shell {
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
-  min-height: 100vh;
-  gap: 16px;
-  padding: 16px;
-}
-
-.sidebarToggle,
-.panelClose {
-  display: none;
-}
-
-.sidebarToggle {
-  position: fixed;
-  left: 16px;
-  top: 16px;
-  z-index: 30;
-  display: none;
-  width: 38px;
-  height: 38px;
-  padding: 0;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.88);
-  color: var(--accent-strong);
-  box-shadow: 0 10px 24px rgba(18, 34, 47, 0.12);
-  cursor: pointer;
-}
-
-.sidebarToggleActive {
-  background: var(--accent-strong);
-  color: #f7f3ea;
-}
-
-.sidebarToggleIcon {
-  position: relative;
   display: block;
-  width: 16px;
-  height: 12px;
-  margin: 0 auto;
-}
-
-.sidebarToggleIcon span {
-  position: absolute;
-  left: 0;
-  width: 16px;
-  height: 2px;
-  border-radius: 999px;
-  background: currentColor;
-  transition: transform 180ms ease, opacity 180ms ease, top 180ms ease;
-}
-
-.sidebarToggleIcon span:nth-child(1) {
-  top: 0;
-}
-
-.sidebarToggleIcon span:nth-child(2) {
-  top: 5px;
-}
-
-.sidebarToggleIcon span:nth-child(3) {
-  top: 10px;
-}
-
-.sidebarToggleIconClose span:nth-child(1) {
-  top: 5px;
-  transform: rotate(45deg);
-}
-
-.sidebarToggleIconClose span:nth-child(2) {
-  opacity: 0;
-}
-
-.sidebarToggleIconClose span:nth-child(3) {
-  top: 5px;
-  transform: rotate(-45deg);
-}
-
-.sidebarBackdrop {
-  display: none;
+  min-height: 100vh;
+  padding: 16px;
 }
 
 .panel {
-  position: sticky;
-  top: 28px;
-  align-self: start;
   display: grid;
   gap: 14px;
-  height: calc(100vh - 56px);
-  max-height: calc(100vh - 56px);
-  min-height: 0;
   padding: 16px;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
   border: 1px solid var(--line);
   border-radius: 24px;
   background: rgba(251, 248, 241, 0.88);
@@ -112,8 +25,35 @@
 
 .workspace {
   display: grid;
-  gap: 10px;
+  gap: 12px;
   min-width: 0;
+}
+
+.workspaceIntro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18px 38px rgba(18, 34, 47, 0.08);
+}
+
+.workspaceTitle {
+  margin-top: 4px;
+  font-family: var(--font-serif), serif;
+  font-size: 1.25rem;
+  line-height: 1.1;
+  color: var(--accent-strong);
+}
+
+.workspaceHint {
+  max-width: 430px;
+  color: var(--muted);
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
 .workflowGrid {
@@ -130,6 +70,10 @@
   border-radius: 20px;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 18px 38px rgba(18, 34, 47, 0.06);
+}
+
+.workflowCardFull {
+  grid-column: 1 / -1;
 }
 
 .workflowHeader,
@@ -196,6 +140,28 @@
   border-color: rgba(139, 69, 24, 0.28);
   background: linear-gradient(135deg, rgba(184, 100, 43, 0.16), rgba(255, 255, 255, 0.92));
   box-shadow: 0 12px 24px rgba(139, 69, 24, 0.1);
+}
+
+.generateGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 420px);
+  gap: 12px;
+  align-items: start;
+}
+
+.generateStatusCard,
+.generateActionsCard {
+  display: grid;
+  gap: 10px;
+  min-height: 100%;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.generateActionsCard {
+  align-content: start;
 }
 
 .toolbar {
@@ -287,9 +253,41 @@
   line-height: 1.45;
 }
 
+.resultsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.68);
+  box-shadow: 0 18px 38px rgba(18, 34, 47, 0.05);
+}
+
+.resultsMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.resultsMeta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .contentGrid {
   display: grid;
-  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 290px) minmax(0, 1fr);
   gap: 12px;
   align-items: start;
 }
@@ -313,6 +311,11 @@
 .previewPanel {
   min-width: 0;
   align-content: start;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(251, 248, 241, 0.82);
+  box-shadow: var(--shadow);
 }
 
 .previewCanvas {
@@ -324,6 +327,50 @@
 .section {
   display: grid;
   gap: 8px;
+}
+
+.collapsibleHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.sectionToggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  color: var(--accent-strong);
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.sectionToggle:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.sectionToggleIcon {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 180ms ease;
+}
+
+.sectionToggleIconOpen {
+  transform: rotate(225deg);
 }
 
 .eyebrow {
@@ -396,8 +443,7 @@
 .ghostAction,
 .uploadAction,
 .inlineAction,
-.templateCard,
-.panelClose {
+.templateCard {
   transition:
     transform 160ms ease,
     box-shadow 160ms ease,
@@ -409,8 +455,7 @@
 .primaryAction,
 .secondaryAction,
 .ghostAction,
-.uploadAction,
-.panelClose {
+.uploadAction {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -422,14 +467,20 @@
   cursor: pointer;
 }
 
+.actionContent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
 .primaryAction:hover,
 .secondaryAction:hover,
 .ghostAction:hover,
 .uploadAction:hover,
 .inlineAction:hover,
 .templateCard:hover,
-.learnerSelect:hover,
-.panelClose:hover {
+.learnerSelect:hover {
   transform: translateY(-1px);
 }
 
@@ -445,8 +496,7 @@
 }
 
 .ghostAction,
-.uploadAction,
-.panelClose {
+.uploadAction {
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.6);
   color: var(--ink);
@@ -509,6 +559,59 @@
 .statusError {
   background: rgba(141, 48, 48, 0.08);
   color: var(--danger);
+}
+
+.exportStatus {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1px solid rgba(184, 100, 43, 0.18);
+  border-radius: 16px;
+  background: rgba(184, 100, 43, 0.08);
+}
+
+.exportStatusHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+}
+
+.exportStatusHeader strong {
+  flex: 1;
+}
+
+.exportStatusText {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.loaderDot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(184, 100, 43, 0.2);
+  border-top-color: var(--accent-strong);
+  border-radius: 999px;
+  animation: bulk-spin 0.8s linear infinite;
+}
+
+.exportProgressTrack {
+  position: relative;
+  overflow: hidden;
+  height: 7px;
+  border-radius: 999px;
+  background: rgba(184, 100, 43, 0.12);
+}
+
+.exportProgressFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  transition: width 180ms ease;
 }
 
 .panelHeader,
@@ -626,53 +729,19 @@
   pointer-events: none;
 }
 
-@media (max-width: 1200px) {
-  .shell {
-    grid-template-columns: 1fr;
-    padding-top: 70px;
-  }
-
-  .sidebarToggle {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .sidebarBackdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    background: rgba(11, 20, 28, 0.38);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 180ms ease;
-  }
-
-  .sidebarBackdropVisible {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .panel {
-    position: fixed;
-    left: 16px;
-    top: 16px;
-    bottom: 16px;
-    z-index: 24;
-    width: min(430px, calc(100vw - 32px));
-    height: auto;
-    max-height: none;
-    transform: translateX(calc(-100% - 24px));
-    transition: transform 220ms ease;
-  }
-
-  .panelOpen {
-    transform: translateX(0);
+@keyframes bulk-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
 @media (max-width: 1240px) {
   .workflowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .generateGrid,
+  .resultsHeader {
     grid-template-columns: 1fr;
   }
 
@@ -702,26 +771,36 @@
     grid-template-columns: 1fr;
   }
 
+  .workspaceIntro,
+  .generateGrid,
   .workflowHeader,
   .templateDockHeader,
   .toolbar,
-  .previewHeader {
+  .previewHeader,
+  .resultsHeader {
     flex-direction: column;
   }
 
+  .generateGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
   .toolbarActions,
-  .previewActions {
+  .previewActions,
+  .resultsMeta {
     justify-content: flex-start;
   }
 }
 
 @media (max-width: 680px) {
   .shell {
-    padding: 64px 14px 14px;
+    padding: 14px;
   }
 
-  .toolbar,
+  .panel,
   .listPanel,
+  .previewPanel,
   .workflowCard {
     padding: 12px;
     border-radius: 18px;

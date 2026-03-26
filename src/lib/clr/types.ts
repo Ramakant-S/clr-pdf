@@ -25,6 +25,49 @@ export interface TranscriptLegendItem {
   description: string;
 }
 
+export interface TranscriptAlignment {
+  name: string;
+  code?: string;
+  framework?: string;
+  description?: string;
+  targetType?: string;
+  url?: string;
+}
+
+export interface TranscriptRubricCriterionLevel {
+  id: string;
+  name: string;
+  level?: string;
+  description?: string;
+  points?: string;
+  alignment: TranscriptAlignment[];
+}
+
+export interface TranscriptResultDescriptor {
+  id: string;
+  name: string;
+  resultType: string;
+  description?: string;
+  value?: string;
+  status?: string;
+  valueMin?: string;
+  valueMax?: string;
+  rubricLevels: TranscriptRubricCriterionLevel[];
+  alignment: TranscriptAlignment[];
+  achievedLevelId?: string;
+  achievedLevelLabel?: string;
+}
+
+export interface TranscriptSkill {
+  name: string;
+  proficiencyLevel?: string;
+  framework?: string;
+  code?: string;
+  description?: string;
+  targetType?: string;
+  url?: string;
+}
+
 export interface TranscriptCourse {
   id: string;
   title: string;
@@ -34,6 +77,8 @@ export interface TranscriptCourse {
   term: string;
   summary: string;
   skills: string[];
+  skillDetails: TranscriptSkill[];
+  alignments: TranscriptAlignment[];
   gradeLabel: string;
   gradeValue?: number;
   creditsLabel: string;
@@ -41,6 +86,7 @@ export interface TranscriptCourse {
   status: string;
   startDate?: string;
   endDate?: string;
+  resultDescriptors: TranscriptResultDescriptor[];
 }
 
 export interface TranscriptInstitution {
@@ -83,6 +129,8 @@ export interface TranscriptRecord {
   courses: TranscriptCourse[];
   notes: string[];
   gradeLegend: TranscriptLegendItem[];
+  proficiencyLegend: TranscriptLegendItem[];
+  abbreviations: TranscriptLegendItem[];
   modelHints: string[];
 }
 

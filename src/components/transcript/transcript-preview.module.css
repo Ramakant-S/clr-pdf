@@ -15,13 +15,15 @@
   --template-card-radius: 10px;
   --template-chip-radius: 999px;
   --template-card-shadow: none;
+  --template-font-body: var(--font-sans);
+  --template-font-heading: var(--font-serif);
+  --template-font-accent: var(--font-sans);
   display: grid;
   gap: 14px;
   padding-bottom: 18px;
 }
 
 .document[data-exporting="true"] .sheet {
-  background: #ffffff;
   box-shadow: none;
 }
 
@@ -92,6 +94,9 @@
   --template-success-fg: #1f4d7a;
   --template-sheet-radius: 12px;
   --template-card-radius: 10px;
+  --template-font-body: var(--font-roboto);
+  --template-font-heading: var(--font-montserrat);
+  --template-font-accent: var(--font-montserrat);
 }
 
 .templateLedger {
@@ -127,6 +132,9 @@
   --template-success-fg: #3d6178;
   --template-sheet-radius: 34px;
   --template-card-radius: 0;
+  --template-font-body: var(--font-roboto);
+  --template-font-heading: var(--font-montserrat);
+  --template-font-accent: var(--font-montserrat);
 }
 
 .sheet {
@@ -135,26 +143,27 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   padding: 14px 16px 12px;
   border: 1px solid var(--template-border);
-  border-radius: var(--template-sheet-radius);
-  background: linear-gradient(180deg, #ffffff 0%, var(--template-paper) 100%);
+  border-radius: 0;
+  background: #ffffff;
   color: var(--template-ink);
+  font-family: var(--template-font-body), sans-serif;
   overflow: hidden;
 }
 
 .sheetHeader,
 .compactHeader {
   display: grid;
-  align-items: start;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--template-border);
 }
 
 .sheetHeader {
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.25fr) 118px;
+  grid-template-columns: minmax(280px, 1fr) minmax(360px, 520px) minmax(140px, 1fr);
   grid-template-areas: "brand title verify";
 }
 
@@ -168,11 +177,17 @@
   gap: 10px;
   align-items: center;
   min-height: 56px;
+  justify-self: start;
+  max-width: 360px;
 }
 
 .titleBlock {
   grid-area: title;
   text-align: center;
+  justify-self: center;
+  width: 100%;
+  max-width: 520px;
+  padding-inline: 10px;
 }
 
 .verificationCard {
@@ -203,14 +218,14 @@
   border-radius: 8px;
   background: linear-gradient(145deg, var(--template-accent) 0%, var(--template-accent-strong) 100%);
   color: #f7f3ea;
-  font-family: var(--font-serif), serif;
+  font-family: var(--template-font-heading), serif;
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .institutionName {
-  font-family: var(--font-serif), serif;
+  font-family: var(--template-font-heading), serif;
   font-size: 0.9rem;
   line-height: 1.08;
   color: var(--template-accent-strong);
@@ -235,7 +250,7 @@
 .overflowTitle,
 .tableTitle,
 .panelTitle {
-  font-family: var(--font-serif), serif;
+  font-family: var(--template-font-heading), serif;
   color: var(--template-accent-strong);
 }
 
@@ -277,7 +292,9 @@
 .identityGrid,
 .summaryGrid,
 .bottomGrid,
-.legendGrid {
+.legendGrid,
+.legendColumns,
+.legendColumn {
   display: grid;
   gap: 8px;
 }
@@ -307,7 +324,15 @@
 }
 
 .legendGrid {
-  grid-template-columns: 1.05fr 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  align-content: start;
+  grid-auto-rows: min-content;
+}
+
+.legendColumns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
 }
 
 .headerCell,
@@ -325,7 +350,7 @@
 .detailCell,
 .summaryCard,
 .compactPanel {
-  padding: 6px 8px 7px;
+  padding: 8px 10px;
 }
 
 .headerCell strong,
@@ -348,12 +373,13 @@
 }
 
 .summaryCard strong {
-  font-family: var(--font-serif), serif;
+  font-family: var(--template-font-heading), serif;
   font-size: 0.98rem;
   line-height: 1;
 }
 
 .label {
+  font-family: var(--template-font-accent), sans-serif;
   font-size: 0.5rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -387,6 +413,7 @@
 
 .panelTitle {
   font-size: 0.76rem;
+  margin-bottom: 4px;
 }
 
 .tableHint,
@@ -405,6 +432,7 @@
 .table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
 .table th,
@@ -420,6 +448,7 @@
 }
 
 .table th {
+  font-family: var(--template-font-accent), sans-serif;
   font-size: 0.52rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -453,10 +482,7 @@
 }
 
 .courseHeading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
+  display: block;
 }
 
 .courseTitle {
@@ -467,13 +493,20 @@
 }
 
 .codeChip {
-  flex-shrink: 0;
-  padding: 2px 6px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  margin-top: 5px;
+  padding: 0 8px;
   border-radius: var(--template-chip-radius);
+  border: 1px solid rgba(19, 33, 45, 0.08);
   background: var(--template-accent-soft);
   color: var(--template-accent-strong);
+  font-family: var(--template-font-accent), sans-serif;
   font-size: 0.52rem;
   font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .summaryText {
@@ -490,27 +523,94 @@
 }
 
 .skillTag {
-  padding: 2px 6px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
   border-radius: var(--template-chip-radius);
+  border: 1px solid rgba(19, 33, 45, 0.08);
   background: var(--template-accent-soft);
   color: var(--template-accent-strong);
+  min-height: 22px;
+  text-align: center;
+}
+
+.skillTagName {
   font-size: 0.56rem;
+  font-weight: 700;
+  line-height: 1.16;
+  word-spacing: normal;
+}
+
+.skillTagMeta {
+  color: var(--template-muted);
+  font-family: var(--template-font-accent), sans-serif;
+  font-size: 0.48rem;
   font-weight: 600;
-  line-height: 1.2;
+  line-height: 1.1;
+}
+
+.typeBadge,
+.statusPill {
+  font-family: var(--template-font-accent), sans-serif;
 }
 
 .typeBadge {
   display: inline-flex;
   align-items: center;
-  min-height: 18px;
-  padding: 0 7px;
+  justify-content: center;
+  min-height: 20px;
+  max-width: 100%;
+  padding: 3px 8px;
   border-radius: var(--template-chip-radius);
+  border: 1px solid rgba(19, 33, 45, 0.08);
   background: rgba(19, 33, 45, 0.06);
   color: var(--template-accent-strong);
   font-size: 0.54rem;
   font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
+  line-height: 1.16;
+  text-align: center;
+  letter-spacing: 0;
+  word-spacing: normal;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px;
+  max-width: 100%;
+  padding: 3px 8px;
+  border-radius: var(--template-chip-radius);
+  border: 1px solid rgba(47, 107, 85, 0.08);
+  background: var(--template-success-bg);
+  color: var(--template-success-fg);
+  font-size: 0.54rem;
+  font-weight: 700;
+  line-height: 1.16;
+  text-align: center;
+  letter-spacing: 0;
+  word-spacing: normal;
+}
+
+.inlineMetaText,
+.inlineMetaTextStrong,
+.inlineMetaList {
+  color: var(--template-ink);
+  font-family: var(--template-font-accent), sans-serif;
+  font-size: 0.58rem;
+  line-height: 1.24;
+}
+
+.inlineMetaTextStrong {
+  font-weight: 700;
+}
+
+.inlineMetaList {
+  margin: 0;
+  color: var(--template-muted);
 }
 
 .skillsPanel {
@@ -528,23 +628,10 @@
   font-size: 0.74rem;
 }
 
-.statusPill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 18px;
-  padding: 0 7px;
-  border-radius: var(--template-chip-radius);
-  background: var(--template-success-bg);
-  color: var(--template-success-fg);
-  font-size: 0.54rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
 .metaList {
   display: grid;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .metaItem {
@@ -590,7 +677,7 @@
   align-items: center;
   gap: 10px;
   margin-top: auto;
-  padding-top: 6px;
+  padding-top: 8px;
   border-top: 1px solid var(--template-border);
   color: var(--template-muted);
   font-size: 0.58rem;
@@ -600,21 +687,13 @@
   font-weight: 700;
 }
 
-.templateHeritage .sheet::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 6px;
-  background: linear-gradient(90deg, rgba(184, 100, 43, 0.28) 0%, rgba(184, 100, 43, 0) 72%);
-}
-
 .templateHeritage .tablePanel {
   border-top: 2px solid rgba(184, 100, 43, 0.18);
 }
 
 .templateScholar .sheet {
   padding: 18px 20px 16px;
-  background: linear-gradient(180deg, #fcfdff 0%, #edf4fb 100%);
+  background: #ffffff;
 }
 
 .templateScholar .sheetHeader {
@@ -726,10 +805,7 @@
 
 .templateModern .sheet {
   padding: 18px 18px 16px;
-  background:
-    radial-gradient(circle at top right, rgba(45, 135, 96, 0.12), transparent 24%),
-    radial-gradient(circle at 12% 22%, rgba(45, 135, 96, 0.08), transparent 30%),
-    linear-gradient(180deg, #ffffff 0%, #f3fbf7 100%);
+  background: #ffffff;
 }
 
 .templateModern .sheetHeader {
@@ -842,7 +918,7 @@
 }
 
 .templateExecutive .sheet {
-  background: linear-gradient(180deg, #ffffff 0%, #f3f7fb 100%);
+  background: #ffffff;
 }
 
 .templateExecutive .sheetHeader {
@@ -959,16 +1035,14 @@
 
 .templateLedger .sheet {
   padding: 14px 14px 12px;
-  background:
-    linear-gradient(180deg, rgba(20, 20, 20, 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(20, 20, 20, 0.02) 1px, transparent 1px),
-    linear-gradient(180deg, #ffffff 0%, #fafafa 100%);
-  background-size: 100% 28px, 26px 100%, 100% 100%;
+  background: #ffffff;
 }
 
 .templateLedger .sheetHeader {
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) 132px;
   gap: 6px;
   padding-bottom: 6px;
+  align-items: stretch;
 }
 
 .templateLedger .brandBlock,
@@ -981,15 +1055,27 @@
 }
 
 .templateLedger .brandBlock {
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  align-content: start;
+  gap: 10px;
+  max-width: none;
 }
 
 .templateLedger .titleBlock {
-  text-align: left;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+  max-width: none;
+  padding-inline: 18px;
 }
 
 .templateLedger .verificationCard {
-  width: 118px;
+  width: 132px;
+  justify-self: end;
+  align-self: stretch;
 }
 
 .templateLedger .titleEyebrow,
@@ -1071,8 +1157,8 @@
 .templateLedger .skillTag,
 .templateLedger .statusPill {
   border-radius: 2px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .templateLedger .codeChip,
@@ -1091,27 +1177,30 @@
 }
 
 .templateMinimal .sheetHeader {
-  grid-template-columns: minmax(0, 1.35fr) 136px;
-  grid-template-areas:
-    "brand verify"
-    "title verify";
-  gap: 14px 18px;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr) 136px;
+  grid-template-areas: "brand title verify";
+  align-items: center;
+  gap: 16px;
   padding-bottom: 12px;
 }
 
 .templateMinimal .brandBlock {
-  align-items: flex-start;
+  max-width: 320px;
+  align-items: center;
 }
 
 .templateMinimal .titleBlock {
-  text-align: left;
-  max-width: 500px;
+  text-align: center;
+  max-width: none;
+  padding-inline: 12px;
+  align-self: center;
 }
 
 .templateMinimal .verificationCard {
   width: 136px;
   border-radius: 24px;
   background: #fafcfd;
+  align-self: center;
 }
 
 .templateMinimal .transcriptMeta {
@@ -1199,7 +1288,11 @@
 .templateMinimal .typeBadge,
 .templateMinimal .statusPill {
   background: transparent;
-  border: 1px solid rgba(95, 108, 121, 0.22);
+  border: none;
+  padding: 0;
+  min-height: 0;
+  justify-content: flex-start;
+  text-align: left;
 }
 
 .templateMinimal .compactPanel {
@@ -1215,13 +1308,9 @@
   border-bottom: 1px solid var(--template-border);
 }
 
-[data-exporting="true"] .sheet {
-  border-radius: 0;
-  background: #ffffff;
-}
-
-@media (max-width: 1240px) {
-  .document {
-    width: max-content;
-  }
+.templateMinimal .inlineMetaText,
+.templateMinimal .inlineMetaTextStrong,
+.templateMinimal .inlineMetaList {
+  font-size: 0.6rem;
+  line-height: 1.3;
 }

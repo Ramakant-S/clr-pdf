@@ -9,6 +9,7 @@ import type {
   TranscriptCourse,
   TranscriptCustomization,
   TranscriptRecord,
+  TranscriptSkill,
   TranscriptTemplate,
 } from "@/lib/clr/types";
 import styles from "./transcript-preview.module.css";
@@ -25,7 +26,41 @@ function shortenValue(value: string, maxLength = 44) {
   return `${value.slice(0, maxLength - 3)}...`;
 }
 
-function renderCourseRows(courses: TranscriptCourse[]) {
+function formatSkillValue(skill: TranscriptSkill | string) {
+  if (typeof skill === "string") {
+    return skill;
+  }
+
+  return skill.proficiencyLevel
+    ? `${skill.name} (${skill.proficiencyLevel})`
+    : skill.name;
+}
+
+function renderSkillTag(skill: TranscriptSkill | string, key: string) {
+  if (typeof skill === "string") {
+    return (
+      <span key={key} className={styles.skillTag}>
+        <span className={styles.skillTagName}>{skill}</span>
+      </span>
+    );
+  }
+
+  const skillMeta = [skill.proficiencyLevel].filter(Boolean).join(" / ");
+
+  return (
+    <span key={key} className={styles.skillTag}>
+      <span className={styles.skillTagName}>{skill.name}</span>
+      {skillMeta ? <span className={styles.skillTagMeta}>{skillMeta}</span> : null}
+    </span>
+  );
+}
+
+function renderCourseRows(
+  courses: TranscriptCourse[],
+  template: TranscriptTemplate,
+) {
+  const usePlainMeta = template === "minimal";
+
   if (courses.length === 0) {
     return (
       <tr>
@@ -43,34 +78,60 @@ function renderCourseRows(courses: TranscriptCourse[]) {
       <td>
         <div className={styles.courseHeading}>
           <span className={styles.courseTitle}>{course.title}</span>
-          <span className={styles.codeChip}>{course.code}</span>
         </div>
         <p className={styles.summaryText}>{course.summary}</p>
+        <span className={styles.codeChip}>{course.code}</span>
       </td>
       <td>
-        <span className={styles.typeBadge}>
-          {formatTranscriptEntryType(course.credentialType)}
-        </span>
+        {usePlainMeta ? (
+          <span className={styles.inlineMetaText}>
+            {formatTranscriptEntryType(course.credentialType)}
+          </span>
+        ) : (
+          <span className={styles.typeBadge}>
+            {formatTranscriptEntryType(course.credentialType)}
+          </span>
+        )}
       </td>
       <td>
-        <div className={styles.skillList}>
-          {course.skills.length > 0 ? (
-            course.skills.map((skill) => (
-              <span key={`${course.id}-${skill}`} className={styles.skillTag}>
-                {skill}
-              </span>
-            ))
-          ) : (
-            <span className={styles.summaryText}>No skills recorded</span>
-          )}
-        </div>
+        {usePlainMeta ? (
+          <p className={styles.inlineMetaList}>
+            {(course.skillDetails.length > 0 ? course.skillDetails : course.skills).length > 0
+              ? (course.skillDetails.length > 0
+                  ? course.skillDetails
+                  : course.skills
+                )
+                  .map((skill) => formatSkillValue(skill))
+                  .join(", ")
+              : "No skills recorded"}
+          </p>
+        ) : (
+          <div className={styles.skillList}>
+            {(course.skillDetails.length > 0 ? course.skillDetails : course.skills).length >
+            0 ? (
+              (course.skillDetails.length > 0 ? course.skillDetails : course.skills).map(
+                (skill, index) =>
+                  renderSkillTag(
+                    skill,
+                    `${course.id}-${typeof skill === "string" ? skill : `${skill.name}-${index}`}`,
+                  ),
+              )
+            ) : (
+              <span className={styles.summaryText}>No skills recorded</span>
+            )}
+          </div>
+        )}
       </td>
       <td className={styles.gradeCell}>
         <span className={styles.gradeValue}>{course.gradeLabel}</span>
       </td>
       <td className={styles.metricCell}>{course.creditsLabel}</td>
       <td>
-        <span className={styles.statusPill}>{course.status}</span>
+        {usePlainMeta ? (
+          <span className={styles.inlineMetaTextStrong}>{course.status}</span>
+        ) : (
+          <span className={styles.statusPill}>{course.status}</span>
+        )}
       </td>
     </tr>
   ));
@@ -289,7 +350,7 @@ export function TranscriptPreview({
                 <th>Result</th>
               </tr>
             </thead>
-            <tbody>{renderCourseRows(pages.cover)}</tbody>
+            <tbody>{renderCourseRows(pages.cover, activeTemplate)}</tbody>
           </table>
         </section>
 
@@ -301,17 +362,23 @@ export function TranscriptPreview({
 
           <section className={`${styles.compactPanel} ${styles.skillsPanel}`}>
             <p className={styles.panelTitle}>Acquired Skills</p>
-            <div className={styles.skillList}>
-              {record.summary.topSkills.length > 0 ? (
-                record.summary.topSkills.map((skill) => (
-                  <span key={skill} className={styles.skillTag}>
-                    {skill}
-                  </span>
-                ))
-              ) : (
-                <span className={styles.summaryText}>No skills were recorded.</span>
-              )}
-            </div>
+            {activeTemplate === "minimal" ? (
+              <p className={styles.inlineMetaList}>
+                {record.summary.topSkills.length > 0
+                  ? record.summary.topSkills.join(", ")
+                  : "No skills were recorded."}
+              </p>
+            ) : (
+              <div className={styles.skillList}>
+                {record.summary.topSkills.length > 0 ? (
+                  record.summary.topSkills.map((skill) => (
+                    renderSkillTag(skill, skill)
+                  ))
+                ) : (
+                  <span className={styles.summaryText}>No skills were recorded.</span>
+                )}
+              </div>
+            )}
           </section>
         </div>
 
@@ -350,7 +417,7 @@ export function TranscriptPreview({
                   <th>Result</th>
                 </tr>
               </thead>
-              <tbody>{renderCourseRows(courses)}</tbody>
+              <tbody>{renderCourseRows(courses, activeTemplate)}</tbody>
             </table>
           </section>
 
@@ -375,57 +442,89 @@ export function TranscriptPreview({
           </div>
         </header>
 
-        <div className={styles.legendGrid}>
-          <section className={styles.compactPanel}>
-            <p className={styles.panelTitle}>Grade Interpretation</p>
-            <table className={styles.legendTable}>
-              <tbody>
-                {record.gradeLegend.map((entry) => (
-                  <tr key={entry.label}>
-                    <td className={styles.legendCode}>{entry.label}</td>
-                    <td className={styles.legendCopy}>{entry.description}</td>
-                  </tr>
+        <div className={styles.legendColumns}>
+          <div className={styles.legendColumn}>
+            <section className={styles.compactPanel}>
+              <p className={styles.panelTitle}>Grade Interpretation</p>
+              <table className={styles.legendTable}>
+                <tbody>
+                  {record.gradeLegend.map((entry) => (
+                    <tr key={entry.label}>
+                      <td className={styles.legendCode}>{entry.label}</td>
+                      <td className={styles.legendCopy}>{entry.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+
+            <section className={styles.compactPanel}>
+              <p className={styles.panelTitle}>Abbreviations</p>
+              <table className={styles.legendTable}>
+                <tbody>
+                  {record.abbreviations.map((entry) => (
+                    <tr key={entry.label}>
+                      <td className={styles.legendCode}>{entry.label}</td>
+                      <td className={styles.legendCopy}>{entry.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+
+            <section className={styles.compactPanel}>
+              <p className={styles.panelTitle}>Transcript Notes</p>
+              <div className={styles.metaList}>
+                {record.notes.map((note) => (
+                  <p key={note} className={styles.legendCopy}>
+                    {note}
+                  </p>
                 ))}
-              </tbody>
-            </table>
-          </section>
+              </div>
+            </section>
+          </div>
 
-          <section className={styles.compactPanel}>
-            <p className={styles.panelTitle}>Record Details</p>
-            <div className={styles.metaList}>
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Credential Title</span>
-                <span className={styles.value}>{record.title}</span>
-              </div>
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Credential Models</span>
-                <span className={styles.value}>
-                  {record.modelHints.join(", ") || "CLR"}
-                </span>
-              </div>
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Verification Source</span>
-                <span className={styles.value}>
-                  {record.verificationUrl ?? "Not recorded"}
-                </span>
-              </div>
-              <div className={styles.metaItem}>
-                <span className={styles.label}>Registrar</span>
-                <span className={styles.value}>{customization.registrarName}</span>
-              </div>
-            </div>
-          </section>
+          <div className={styles.legendColumn}>
+            <section className={styles.compactPanel}>
+              <p className={styles.panelTitle}>Proficiency Scale</p>
+              <table className={styles.legendTable}>
+                <tbody>
+                  {record.proficiencyLegend.map((entry) => (
+                    <tr key={entry.label}>
+                      <td className={styles.legendCode}>{entry.label}</td>
+                      <td className={styles.legendCopy}>{entry.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
 
-          <section className={styles.compactPanel}>
-            <p className={styles.panelTitle}>Transcript Notes</p>
-            <div className={styles.metaList}>
-              {record.notes.map((note) => (
-                <p key={note} className={styles.legendCopy}>
-                  {note}
-                </p>
-              ))}
-            </div>
-          </section>
+            <section className={styles.compactPanel}>
+              <p className={styles.panelTitle}>Record Details</p>
+              <div className={styles.metaList}>
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Credential Title</span>
+                  <span className={styles.value}>{record.title}</span>
+                </div>
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Credential Models</span>
+                  <span className={styles.value}>
+                    {record.modelHints.join(", ") || "CLR"}
+                  </span>
+                </div>
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Verification Source</span>
+                  <span className={styles.value}>
+                    {record.verificationUrl ?? "Not recorded"}
+                  </span>
+                </div>
+                <div className={styles.metaItem}>
+                  <span className={styles.label}>Registrar</span>
+                  <span className={styles.value}>{customization.registrarName}</span>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
 
         <footer className={styles.footer}>

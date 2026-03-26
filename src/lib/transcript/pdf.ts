@@ -3,68 +3,126 @@
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
 
-async function buildTranscriptPdf(root: HTMLElement) {
-  const pages = Array.from(
-    root.querySelectorAll<HTMLElement>("[data-transcript-page]"),
+async function waitForRenderableState(root: HTMLElement) {
+  if ("fonts" in document) {
+    await document.fonts.ready;
+  }
+
+  const images = Array.from(root.querySelectorAll<HTMLImageElement>("img"));
+  await Promise.all(
+    images.map(async (image) => {
+      if (!image.currentSrc && !image.src) {
+        return;
+      }
+
+      if (!image.complete) {
+        await new Promise<void>((resolve) => {
+          const finalize = () => {
+            image.removeEventListener("load", finalize);
+            image.removeEventListener("error", finalize);
+            resolve();
+          };
+
+          image.addEventListener("load", finalize, { once: true });
+          image.addEventListener("error", finalize, { once: true });
+        });
+      }
+
+      if ("decode" in image) {
+        try {
+          await image.decode();
+        } catch {
+          // Ignore decode failures and continue with the rendered image state.
+        }
+      }
+    }),
   );
+
+  await new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
+  await new Promise<void>((resolve) => {
+    window.requestAnimationFrame(() => resolve());
+  });
+}
+
+function getPageSizePx(page: HTMLElement) {
+  const bounds = page.getBoundingClientRect();
+
+  return {
+    width: Math.max(Math.round(bounds.width), page.offsetWidth, 1),
+    height: Math.max(Math.round(bounds.height), page.offsetHeight, 1),
+  };
+}
+
+async function buildTranscriptPdf(root: HTMLElement) {
+  const pages = Array.from(root.querySelectorAll<HTMLElement>("[data-transcript-page]"));
 
   if (pages.length === 0) {
     throw new Error("No transcript pages are available for export.");
   }
 
-  const pdf = new jsPDF({
-    orientation: "landscape",
-    unit: "mm",
-    format: "a4",
-    compress: true,
-  });
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
+  await waitForRenderableState(root);
 
-  if ("fonts" in document) {
-    await document.fonts.ready;
-  }
+  const firstPageSize = getPageSizePx(pages[0]);
+  const pageWidthMm = (firstPageSize.width * 25.4) / 96;
+  const pageHeightMm = (firstPageSize.height * 25.4) / 96;
+  const pdf = new jsPDF({
+    orientation: pageWidthMm >= pageHeightMm ? "landscape" : "portrait",
+    unit: "mm",
+    format: [pageWidthMm, pageHeightMm],
+    compress: false,
+  });
 
   root.setAttribute("data-exporting", "true");
 
   try {
-    const renderScale = Math.max(window.devicePixelRatio || 1, 2.5);
+    const renderScale = Math.max(window.devicePixelRatio || 1, 3);
+    const viewportWidth = Math.max(
+      window.innerWidth,
+      document.documentElement.clientWidth,
+      root.scrollWidth,
+      firstPageSize.width,
+    );
+    const viewportHeight = Math.max(
+      window.innerHeight,
+      document.documentElement.clientHeight,
+      firstPageSize.height,
+    );
 
     for (const [index, page] of pages.entries()) {
+      await waitForRenderableState(page);
+
+      const pageSize = getPageSizePx(page);
+      const targetWidthMm = (pageSize.width * 25.4) / 96;
+      const targetHeightMm = (pageSize.height * 25.4) / 96;
       const canvas = await html2canvas(page, {
         backgroundColor: "#ffffff",
         scale: renderScale,
         useCORS: true,
         logging: false,
-        windowWidth: page.scrollWidth,
-        windowHeight: page.scrollHeight,
+        width: pageSize.width,
+        height: pageSize.height,
+        windowWidth: viewportWidth,
+        windowHeight: viewportHeight,
+        imageTimeout: 0,
+        removeContainer: true,
       });
 
       const imageData = canvas.toDataURL("image/png");
-      const aspectRatio = canvas.width / canvas.height;
-      let renderWidth = pageWidth;
-      let renderHeight = renderWidth / aspectRatio;
-
-      if (renderHeight > pageHeight) {
-        renderHeight = pageHeight;
-        renderWidth = renderHeight * aspectRatio;
-      }
-
-      const x = (pageWidth - renderWidth) / 2;
-      const y = (pageHeight - renderHeight) / 2;
       if (index > 0) {
-        pdf.addPage("a4", "landscape");
+        pdf.addPage([targetWidthMm, targetHeightMm], targetWidthMm >= targetHeightMm ? "landscape" : "portrait");
       }
 
       pdf.addImage(
         imageData,
         "PNG",
-        x,
-        y,
-        renderWidth,
-        renderHeight,
+        0,
+        0,
+        targetWidthMm,
+        targetHeightMm,
         undefined,
-        "FAST",
+        "SLOW",
       );
     }
 

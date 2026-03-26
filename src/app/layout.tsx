@@ -1,5 +1,10 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Sans, Source_Serif_4 } from "next/font/google";
+import {
+  IBM_Plex_Sans,
+  Montserrat,
+  Roboto,
+  Source_Serif_4,
+} from "next/font/google";
 import { StoreProvider } from "@/store/provider";
 import "./globals.css";
 
@@ -15,6 +20,18 @@ const serif = Source_Serif_4({
   weight: ["400", "600", "700"],
 });
 
+const roboto = Roboto({
+  variable: "--font-roboto",
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+});
+
+const montserrat = Montserrat({
+  variable: "--font-montserrat",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+});
+
 export const metadata: Metadata = {
   title: "CLR Transcript Studio",
   description:
@@ -27,7 +44,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable}`}>
+    <html
+      lang="en"
+      className={`${sans.variable} ${serif.variable} ${roboto.variable} ${montserrat.variable}`}
+    >
       <body>
         <StoreProvider>{children}</StoreProvider>
       </body>

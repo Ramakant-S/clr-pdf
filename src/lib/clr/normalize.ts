@@ -2,12 +2,16 @@ import { demoClrPayload } from "@/lib/clr/demo-clr";
 import { defaultInstitutionBranding } from "@/lib/branding/defaults";
 import { resolveTranscriptEntryType } from "@/lib/clr/entry-type";
 import type {
+  TranscriptAlignment,
   SourceMode,
   TranscriptCourse,
   TranscriptInstitution,
   TranscriptLearner,
   TranscriptLegendItem,
   TranscriptRecord,
+  TranscriptResultDescriptor,
+  TranscriptRubricCriterionLevel,
+  TranscriptSkill,
 } from "@/lib/clr/types";
 
 type JsonRecord = Record<string, unknown>;
@@ -32,6 +36,40 @@ const gradeLegend: TranscriptLegendItem[] = [
   {
     label: "Below 60",
     description: "Limited demonstration of required learning outcomes; remediation or resubmission may be needed.",
+  },
+];
+
+const defaultProficiencyLegend: TranscriptLegendItem[] = [
+  {
+    label: "Beginning",
+    description: "Early-stage performance with guided participation and limited independent consistency.",
+  },
+  {
+    label: "Developing",
+    description: "Partial command of the skill with growing consistency and occasional support still helpful.",
+  },
+  {
+    label: "Proficient",
+    description: "Consistent independent performance at the expected standard across typical learning tasks.",
+  },
+  {
+    label: "Advanced",
+    description: "Performance exceeds the expected standard and transfers effectively to complex or unfamiliar contexts.",
+  },
+];
+
+const baseAbbreviations: TranscriptLegendItem[] = [
+  {
+    label: "CLR",
+    description: "Comprehensive Learner Record",
+  },
+  {
+    label: "OB",
+    description: "Open Badge credential data aligned with CLR evidence structures.",
+  },
+  {
+    label: "QR",
+    description: "Quick Response code used to open the verification source for the record.",
   },
 ];
 
@@ -238,6 +276,50 @@ function extractNames(source: unknown): string[] {
   ]);
 }
 
+function extractAlignments(source: unknown): TranscriptAlignment[] {
+  return asArray(source)
+    .filter(isRecord)
+    .reduce<TranscriptAlignment[]>((alignments, entry) => {
+      const name = pickString(entry.targetName, entry.name, entry.title);
+      if (!name) {
+        return alignments;
+      }
+
+      alignments.push({
+        name,
+        code: pickString(entry.targetCode, entry.code),
+        framework: pickString(entry.targetFramework, entry.framework),
+        description: pickString(entry.targetDescription, entry.description),
+        targetType: pickString(entry.targetType, entry.type),
+        url: pickString(entry.targetUrl, entry.url, entry.id),
+      });
+
+      return alignments;
+    }, []);
+}
+
+function extractRubricLevels(source: unknown): TranscriptRubricCriterionLevel[] {
+  return asArray(source)
+    .filter(isRecord)
+    .reduce<TranscriptRubricCriterionLevel[]>((levels, entry, index) => {
+      const name = pickString(entry.name, entry.level, entry.id);
+      if (!name) {
+        return levels;
+      }
+
+      levels.push({
+        id: pickString(entry.id) ?? `rubric-level-${index + 1}`,
+        name,
+        level: pickString(entry.level),
+        description: pickString(entry.description),
+        points: pickString(entry.points),
+        alignment: extractAlignments(entry.alignment),
+      });
+
+      return levels;
+    }, []);
+}
+
 function normalizeIssuer(source: unknown): TranscriptInstitution | undefined {
   if (typeof source === "string") {
     return {
@@ -306,6 +388,122 @@ function extractResultEntries(
   return entries;
 }
 
+function extractResultDescriptors(
+  source: unknown,
+  resultsSource: unknown,
+): TranscriptResultDescriptor[] {
+  const results = asArray(resultsSource).filter(isRecord);
+
+  return asArray(source)
+    .filter(isRecord)
+    .map((entry, index) => {
+      const descriptorId =
+        pickString(entry.id) ?? `result-description-${index + 1}`;
+      const rubricLevels = extractRubricLevels(entry.rubricCriterionLevel);
+      const matchedResult = results.find(
+        (result) => pickString(result.resultDescription) === descriptorId,
+      );
+      const achievedLevelId = pickString(matchedResult?.rubricCriterionLevel);
+      const achievedLevelLabel =
+        rubricLevels.find((level) => level.id === achievedLevelId)?.name ??
+        pickString(matchedResult?.value, matchedResult?.status);
+      const name =
+        pickString(entry.name, entry.resultType, entry.type) ??
+        `Result ${index + 1}`;
+
+      return {
+        id: descriptorId,
+        name,
+        resultType: pickString(entry.resultType, entry.type) ?? "Result",
+        description: pickString(entry.description),
+        value: pickString(matchedResult?.value),
+        status: pickString(matchedResult?.status),
+        valueMin: pickString(entry.valueMin),
+        valueMax: pickString(entry.valueMax),
+        rubricLevels,
+        alignment: extractAlignments(entry.alignment),
+        achievedLevelId,
+        achievedLevelLabel,
+      } satisfies TranscriptResultDescriptor;
+    });
+}
+
+function extractLegendItems(source: unknown): TranscriptLegendItem[] {
+  return asArray(source)
+    .filter(isRecord)
+    .map((entry) => {
+      const label = pickString(entry.label, entry.name, entry.term);
+      const description = pickString(
+        entry.description,
+        entry.meaning,
+        entry.definition,
+        entry.narrative,
+      );
+
+      if (!label || !description) {
+        return undefined;
+      }
+
+      return { label, description } satisfies TranscriptLegendItem;
+    })
+    .filter((entry): entry is TranscriptLegendItem => Boolean(entry));
+}
+
+function buildAbbreviations(
+  learner: TranscriptLearner,
+  modelHints: string[],
+): TranscriptLegendItem[] {
+  const abbreviations = [...baseAbbreviations];
+
+  if (learner.oen) {
+    abbreviations.push({
+      label: "OEN",
+      description: "Ontario Education Number or comparable provincial learner identifier.",
+    });
+  }
+
+  if (modelHints.some((hint) => /openbadge|open badge/i.test(hint))) {
+    abbreviations.push({
+      label: "VC",
+      description: "Verifiable Credential packaging used to transport CLR-linked achievement data.",
+    });
+  }
+
+  return abbreviations;
+}
+
+function buildProficiencyLegend(
+  courses: TranscriptCourse[],
+): TranscriptLegendItem[] {
+  const seen = new Map<string, string>();
+
+  for (const course of courses) {
+    for (const descriptor of course.resultDescriptors) {
+      for (const level of descriptor.rubricLevels) {
+        const key = level.name.trim();
+        if (!key || seen.has(key)) {
+          continue;
+        }
+
+        seen.set(
+          key,
+          level.description ||
+            `Rubric level recorded for ${descriptor.name.toLowerCase()}.`,
+        );
+      }
+    }
+  }
+
+  if (seen.size === 0) {
+    return defaultProficiencyLegend;
+  }
+
+  return [...seen.entries()].map(([label, description]) => ({
+    label,
+    description,
+  }));
+}
+
 function sortCourses(courses: TranscriptCourse[]): TranscriptCourse[] {
   return [...courses].sort((left, right) => {
     const leftDate = new Date(left.endDate ?? left.startDate ?? "").getTime();
@@ -369,6 +567,12 @@ function normalizeCourse(
 
   const issuer = normalizeIssuer(credential.issuer) ?? fallbackInstitution;
   const results = extractResultEntries(subject?.result ?? credential.result ?? achievement?.result);
+  const resultDescriptors = extractResultDescriptors(
+    achievement?.resultDescription ??
+      subject?.resultDescription ??
+      credential.resultDescription,
+    subject?.result ?? credential.result ?? achievement?.result,
+  );
   const gradeEntry =
     results.find((entry) => /grade|mark|score/i.test(entry.label)) ??
     results.find((entry) => entry.numeric != null);
@@ -422,6 +626,36 @@ function normalizeCourse(
     parseNumber(achievement?.creditsAvailable) ??
     parseNumber(getValue(subject, "creditsEarned.value")) ??
     parseNumber(subject?.creditsEarned);
+  const alignments = extractAlignments(achievement?.alignment);
+  const rawSkillNames = uniqueStrings([
+    ...alignments.map((alignment) => alignment.name),
+    ...extractNames(achievement?.skill),
+    ...extractNames(achievement?.skills),
+    ...extractNames(achievement?.tag),
+  ]).slice(0, 8);
+  const skillDetails: TranscriptSkill[] = rawSkillNames.map((skillName) => {
+    const matchingAlignment = alignments.find((alignment) => alignment.name === skillName);
+    const matchingResult = resultDescriptors.find((descriptor) => {
+      const descriptorMatchesAlignment = descriptor.alignment.some(
+        (alignment) => alignment.name === skillName,
+      );
+      const descriptorMentionsSkill = descriptor.name
+        .toLowerCase()
+        .includes(skillName.toLowerCase());
+
+      return descriptorMatchesAlignment || descriptorMentionsSkill;
+    });
+
+    return {
+      name: skillName,
+      proficiencyLevel: matchingResult?.achievedLevelLabel,
+      framework: matchingAlignment?.framework,
+      code: matchingAlignment?.code,
+      description: matchingAlignment?.description,
+      targetType: matchingAlignment?.targetType,
+      url: matchingAlignment?.url,
+    };
+  });
 
   return {
     id: pickString(credential.id, achievement?.id) ?? `${courseCode}-${index + 1}`,
@@ -439,12 +673,9 @@ function normalizeCourse(
         deriveTerm(startDateSource),
       ) ?? `Term ${Math.floor(index / 4) + 1}`,
     summary,
-    skills: uniqueStrings([
-      ...extractNames(achievement?.alignment),
-      ...extractNames(achievement?.skill),
-      ...extractNames(achievement?.skills),
-      ...extractNames(achievement?.tag),
-    ]).slice(0, 6),
+    skills: skillDetails.map((skill) => skill.name),
+    skillDetails,
+    alignments,
     gradeLabel: gradeEntry?.value ?? "Recorded",
     gradeValue: gradeEntry?.numeric,
     creditsLabel:
@@ -453,6 +684,7 @@ function normalizeCourse(
     status: statusEntry?.value ?? "Completed",
     startDate: startDateSource,
     endDate: endDateSource,
+    resultDescriptors,
   };
 }
 
@@ -570,13 +802,27 @@ export function normalizeClrDocument(
     formatDate(
       pickString(payload.validFrom, payload.issuanceDate, payload.awardedDate, courses.at(-1)?.endDate),
     ) ?? formatDate(new Date().toISOString())!;
+  const modelHints = uniqueStrings([
+    ...readTypeList(payload),
+    ...embeddedCredentials.flatMap((credential) => readTypeList(credential)),
+  ]);
+  const customProficiencyLegend = extractLegendItems(payload.proficiencyScale);
+  const customAbbreviations = extractLegendItems(payload.transcriptAbbreviations);
+  const proficiencyLegend =
+    customProficiencyLegend.length > 0
+      ? customProficiencyLegend
+      : buildProficiencyLegend(courses);
+  const abbreviations =
+    customAbbreviations.length > 0
+      ? customAbbreviations
+      : buildAbbreviations(learner, modelHints);
 
   return {
     sourceType: options.mode,
     sourceUrl: options.sourceUrl,
     verificationUrl:
       options.sourceUrl ?? pickString(payload.id, payload.identifier, getValue(payload, "credentialSubject.id")),
-    credentialId: pickString(payload.id, payload.identifier) ?? "Credential ID unavailable",
+    credentialId: pickString(payload.identifier, payload.id) ?? "Credential ID unavailable",
     title,
     issuedOn,
     institution,
@@ -602,9 +848,8 @@ export function normalizeClrDocument(
       "The QR code links back to the source credential URL when one is available.",
     ],
     gradeLegend,
-    modelHints: uniqueStrings([
-      ...readTypeList(payload),
-      ...embeddedCredentials.flatMap((credential) => readTypeList(credential)),
-    ]),
+    proficiencyLegend,
+    abbreviations,
+    modelHints,
   };
 }
