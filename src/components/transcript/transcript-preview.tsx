@@ -153,6 +153,8 @@ export function TranscriptPreview({
   const pages = paginateCourses(record.courses);
   const totalPages = 1 + pages.overflow.length + 1;
   const activeTemplate = template ?? customization.template ?? "heritage";
+  const templateClass =
+    styles[`template${activeTemplate[0].toUpperCase()}${activeTemplate.slice(1)}`];
   const institutionName = displayValue(
     customization.institutionName,
     record.institution.name,
@@ -194,11 +196,11 @@ export function TranscriptPreview({
   return (
     <div
       ref={previewRef}
-      className={`${styles.document} ${styles[`template${activeTemplate[0].toUpperCase()}${activeTemplate.slice(1)}`]}`}
+      className={`${styles.document} ${templateClass}`}
       data-transcript-root
       data-template={activeTemplate}
     >
-      <section className={styles.sheet} data-transcript-page>
+      <section className={`${styles.sheet} ${templateClass}`} data-transcript-page>
         <header className={styles.sheetHeader}>
           <div className={styles.brandBlock}>
             {useIbuLogo ? (
@@ -391,7 +393,7 @@ export function TranscriptPreview({
       {pages.overflow.map((courses, index) => (
         <section
           key={`overflow-${index}`}
-          className={styles.sheet}
+          className={`${styles.sheet} ${templateClass}`}
           data-transcript-page
         >
           <header className={styles.compactHeader}>
@@ -430,7 +432,7 @@ export function TranscriptPreview({
         </section>
       ))}
 
-      <section className={styles.sheet} data-transcript-page>
+      <section className={`${styles.sheet} ${templateClass}`} data-transcript-page>
         <header className={styles.compactHeader}>
           <div>
             <p className={styles.titleEyebrow}>{institutionName}</p>
