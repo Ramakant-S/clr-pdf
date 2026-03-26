@@ -1,17 +1,20 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
+  --background: #f4e5d4;
+  --foreground: #2e2219;
+  --paper: #fcf7f0;
+  --surface: rgba(255, 255, 255, 0.76);
+  --surface-strong: #ffffff;
+  --ink: #2f231c;
+  --muted: #7e6757;
+  --line: rgba(86, 55, 36, 0.16);
+  --line-strong: rgba(86, 55, 36, 0.32);
+  --accent: #b8642b;
+  --accent-strong: #8b4518;
+  --accent-soft: #f3dfd0;
+  --success: #2f6b55;
+  --warning: #b06821;
+  --danger: #8d3030;
+  --shadow: 0 30px 60px rgba(90, 56, 31, 0.14);
 }
 
 html,
@@ -20,21 +23,49 @@ body {
   overflow-x: hidden;
 }
 
+html {
+  min-height: 100%;
+}
+
 body {
   min-height: 100%;
-  display: flex;
-  flex-direction: column;
   color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(246, 214, 186, 0.82), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(231, 177, 129, 0.32), transparent 30%),
+    linear-gradient(135deg, #f6eadc 0%, #f0dfcf 100%);
+  font-family: var(--font-sans), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
-  padding: 0;
+}
+
+* {
   margin: 0;
+  padding: 0;
+}
+
+img,
+svg {
+  display: block;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  background: none;
+  color: inherit;
 }
 
 a {
@@ -42,8 +73,36 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+textarea {
+  resize: vertical;
+}
+
+@page {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+@media print {
+  body {
+    background: #ffffff;
+  }
+
+  [data-no-print] {
+    display: none !important;
+  }
+
+  [data-transcript-root] {
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  [data-transcript-page] {
+    width: 100% !important;
+    min-height: calc(210mm - 20mm) !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 0 6mm !important;
+    page-break-after: always;
+    break-after: page;
   }
 }

@@ -1,0 +1,72 @@
+
+> clr-reportcard-app@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.1 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.38:3000
+✓ Ready in 552ms
+Creating turbopack project { dir: 'D:\\Workspace\\Projects\\CLR reportcard', testMode: true }
+
+ GET / 200 in 593ms (next.js: 185ms, application-code: 408ms)
+ GET / 200 in 48ms (next.js: 4ms, application-code: 44ms)
+ GET / 200 in 55ms (next.js: 4ms, application-code: 51ms)
+✓ Compiled in 24ms
+✓ Compiled in 21ms
+✓ Compiled in 10ms
+✓ Compiled in 21ms
+✓ Compiled in 18ms
+ GET / 200 in 92ms (next.js: 8ms, application-code: 84ms)
+ POST /api/clr/normalize 200 in 353ms (next.js: 311ms, application-code: 42ms)
+ POST /api/clr/normalize 200 in 15ms (next.js: 5ms, application-code: 10ms)
+ POST /api/clr/normalize 200 in 56ms (next.js: 22ms, application-code: 34ms)
+ POST /api/clr/normalize 200 in 23ms (next.js: 10ms, application-code: 14ms)
+ GET / 200 in 112ms (next.js: 7ms, application-code: 104ms)
+ GET /bulk 200 in 71ms (next.js: 38ms, application-code: 33ms)
+ GET /bulk 200 in 37ms (next.js: 6ms, application-code: 31ms)
+ GET / 200 in 21ms (next.js: 3ms, application-code: 18ms)
+ GET /bulk 200 in 32ms (next.js: 4ms, application-code: 28ms)
+ GET / 200 in 29ms (next.js: 5ms, application-code: 25ms)
+ GET /bulk 200 in 30ms (next.js: 4ms, application-code: 26ms)
+✓ Compiled in 118ms
+✓ Compiled in 64ms
+✓ Compiled in 52ms
+✓ Compiled in 21ms
+✓ Compiled in 51ms
+✓ Compiled in 251ms
+ GET /bulk 200 in 537ms (next.js: 243ms, application-code: 294ms)
+ GET /bulk 200 in 537ms (next.js: 325ms, application-code: 213ms)
+ GET /bulk 200 in 119ms (next.js: 7ms, application-code: 112ms)
+ GET /bulk 200 in 59ms (next.js: 7ms, application-code: 52ms)
+✓ Compiled in 9ms
+ GET /bulk 200 in 715ms (next.js: 5ms, application-code: 710ms)
+ GET / 200 in 802ms (next.js: 161ms, application-code: 641ms)
+ POST /api/clr/normalize 200 in 231ms (next.js: 204ms, application-code: 27ms)
+ POST /api/clr/normalize 200 in 12ms (next.js: 4ms, application-code: 8ms)
+ POST /api/clr/normalize 200 in 12ms (next.js: 4ms, application-code: 8ms)
+ POST /api/clr/normalize 200 in 7ms (next.js: 1784µs, application-code: 5ms)
+ POST /api/clr/normalize 200 in 9ms (next.js: 3ms, application-code: 6ms)
+ POST /api/clr/normalize 200 in 12ms (next.js: 2ms, application-code: 10ms)
+ POST /api/clr/normalize 200 in 10ms (next.js: 3ms, application-code: 7ms)
+ POST /api/clr/normalize 200 in 11ms (next.js: 3ms, application-code: 7ms)
+ POST /api/clr/normalize 200 in 11ms (next.js: 3ms, application-code: 8ms)
+ GET /bulk 200 in 31ms (next.js: 4ms, application-code: 27ms)
+ GET / 200 in 27ms (next.js: 3ms, application-code: 24ms)
+ GET /bulk 200 in 229ms (next.js: 47ms, application-code: 182ms)
+✓ Compiled in 279ms
+✓ Compiled in 68ms
+ GET /bulk 200 in 816ms (next.js: 154ms, application-code: 662ms)
+✓ Compiled in 88ms
+✓ Compiled in 29ms
+✓ Compiled in 39ms
+✓ Compiled in 54ms
+ GET /bulk 200 in 1397ms (next.js: 432ms, application-code: 965ms)
+✓ Compiled in 5ms
+✓ Compiled in 23ms
+✓ Compiled in 7ms
+✓ Compiled in 13ms
+ GET / 200 in 789ms (next.js: 208ms, application-code: 581ms)
+ GET / 200 in 76ms (next.js: 4ms, application-code: 72ms)
+✓ Compiled in 14ms
+ GET / 200 in 442ms (next.js: 97ms, application-code: 345ms)
+ GET /bulk 200 in 118ms (next.js: 88ms, application-code: 29ms)

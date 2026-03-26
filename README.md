@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CLR Transcript Studio
 
-## Getting Started
+Next.js application for converting 1EdTech CLR 2.0 and embedded Open Badge credentials into a print-ready transcript or report-card style layout.
 
-First, run the development server:
+The app accepts:
+
+- a CLR link
+- pasted CLR JSON
+- a built-in demo CLR
+
+It then normalizes credentials into course rows, adds transcript fields such as institution name, reporting period, result, registrar, and principal, and renders a professional preview with:
+
+- course listing
+- skill summary
+- QR verification
+- print preview
+- PDF download
+
+## Stack
+
+- Next.js App Router
+- React
+- Redux Toolkit
+- RTK Query
+- html2canvas
+- jsPDF
+- qrcode.react
+
+## Run
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Test Sources
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+You can test the app in three ways:
 
-## Learn More
+1. Demo mode
+   Uses the bundled multi-course CLR payload already loaded into the app.
+2. URL mode
+   Enter a direct CLR JSON URL, or click `Use local demo CLR URL` to test URL ingestion against:
+   `http://localhost:3000/api/clr/demo`
+3. JSON mode
+   Paste a CLR/Open Badge JSON payload directly.
 
-To learn more about Next.js, take a look at the following resources:
+## Current Normalization Rules
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The normalizer is in [src/lib/clr/normalize.ts](src/lib/clr/normalize.ts).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+It currently:
 
-## Deploy on Vercel
+- detects top-level CLR credentials and embedded `verifiableCredential` entries
+- treats embedded Open Badge / achievement credentials as transcript courses
+- extracts course title, identifier/code, term, grade, credits, result, and skills
+- derives a transcript summary including total courses, credits, average grade, and top skills
+- preserves a verification URL for QR generation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## API Routes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `POST /api/clr/normalize`
+  Accepts `{ mode, url?, json? }` and returns normalized transcript data.
+- `GET /api/clr/demo`
+  Returns the built-in demo CLR payload as JSON.
+
+## Layout Files
+
+- [src/components/studio/transcript-studio.tsx](src/components/studio/transcript-studio.tsx)
+  Main app shell and editor panel
+- [src/components/transcript/transcript-preview.tsx](src/components/transcript/transcript-preview.tsx)
+  Print-first transcript rendering
+- [src/components/studio/transcript-studio.module.css](src/components/studio/transcript-studio.module.css)
+  Sidebar/editor styles
+- [src/components/transcript/transcript-preview.module.css](src/components/transcript/transcript-preview.module.css)
+  Transcript page styles
+- [src/app/globals.css](src/app/globals.css)
+  Global theme and print rules
+
+## Notes
+
+- The app intentionally labels CLR credentials as courses in the transcript view.
+- Badge terminology is not shown in the report-card layout.
+- The QR code links to the source CLR URL when available.
+- PDF export is client-side and renders the visible transcript pages into an A4 landscape PDF.
+
+## Validation
+
+Validated with:
+
+```bash
+npm run lint
+npm run build
+```
+
+## Next Recommended Step
+
+Provide one real client CLR URL and inspect its exact JSON shape. That will let you tighten any issuer-specific mapping logic for results, course codes, skills, and verification links.
