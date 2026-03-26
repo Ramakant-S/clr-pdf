@@ -35,20 +35,23 @@
 .document[data-exporting="true"] .typeBadge,
 .document[data-exporting="true"] .statusPill,
 .document[data-exporting="true"] .skillTag {
-  display: inline-block;
-  min-height: 0;
-  vertical-align: top;
+  display: inline-grid;
+  align-content: center;
+  justify-items: center;
+  vertical-align: middle;
 }
 
 .document[data-exporting="true"] .codeChip,
 .document[data-exporting="true"] .typeBadge,
 .document[data-exporting="true"] .statusPill {
+  min-height: 22px;
   padding-top: 4px;
   padding-bottom: 4px;
   line-height: 1.2;
 }
 
 .document[data-exporting="true"] .skillTag {
+  min-height: 24px;
   margin: 0 4px 4px 0;
   padding: 4px 8px;
   text-align: left;
@@ -533,11 +536,12 @@
 }
 
 .codeChip {
-  display: inline-flex;
-  align-items: center;
-  min-height: 20px;
+  display: inline-grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 22px;
   margin-top: 5px;
-  padding: 0 8px;
+  padding: 4px 8px;
   border-radius: var(--template-chip-radius);
   border: 1px solid rgba(19, 33, 45, 0.08);
   background: var(--template-accent-soft);
@@ -545,8 +549,10 @@
   font-family: var(--template-font-accent), sans-serif;
   font-size: 0.52rem;
   font-weight: 700;
-  line-height: 1;
+  line-height: 1.16;
+  text-align: center;
   white-space: nowrap;
+  vertical-align: middle;
 }
 
 .summaryText {
@@ -563,21 +569,22 @@
 }
 
 .skillTag {
-  display: inline-flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  display: inline-grid;
+  align-content: center;
+  justify-items: center;
   gap: 2px;
   padding: 4px 8px;
   border-radius: var(--template-chip-radius);
   border: 1px solid rgba(19, 33, 45, 0.08);
   background: var(--template-accent-soft);
   color: var(--template-accent-strong);
-  min-height: 22px;
+  min-height: 24px;
   text-align: center;
+  vertical-align: middle;
 }
 
 .skillTagName {
+  display: block;
   font-size: 0.56rem;
   font-weight: 700;
   line-height: 1.16;
@@ -585,6 +592,7 @@
 }
 
 .skillTagMeta {
+  display: block;
   color: var(--template-muted);
   font-family: var(--template-font-accent), sans-serif;
   font-size: 0.48rem;
@@ -598,12 +606,12 @@
 }
 
 .typeBadge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 20px;
+  display: inline-grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 22px;
   max-width: 100%;
-  padding: 3px 8px;
+  padding: 4px 8px;
   border-radius: var(--template-chip-radius);
   border: 1px solid rgba(19, 33, 45, 0.08);
   background: rgba(19, 33, 45, 0.06);
@@ -613,16 +621,17 @@
   line-height: 1.16;
   text-align: center;
   letter-spacing: 0;
+  vertical-align: middle;
   word-spacing: normal;
 }
 
 .statusPill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 20px;
+  display: inline-grid;
+  align-content: center;
+  justify-items: center;
+  min-height: 22px;
   max-width: 100%;
-  padding: 3px 8px;
+  padding: 4px 8px;
   border-radius: var(--template-chip-radius);
   border: 1px solid rgba(47, 107, 85, 0.08);
   background: var(--template-success-bg);
@@ -632,6 +641,7 @@
   line-height: 1.16;
   text-align: center;
   letter-spacing: 0;
+  vertical-align: middle;
   word-spacing: normal;
 }
 
