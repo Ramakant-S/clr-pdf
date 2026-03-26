@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import { defaultInstitutionBranding, isIbuBranding } from "@/lib/branding/defaults";
@@ -151,8 +152,16 @@ export function TranscriptPreview({
   template,
 }: TranscriptPreviewProps) {
   const pages = paginateCourses(record.courses);
-  const totalPages = 1 + pages.overflow.length + 1;
   const activeTemplate = template ?? customization.template ?? "heritage";
+  const summaryAnchorRef = useRef<HTMLDivElement | null>(null);
+  const footerRef = useRef<HTMLElement | null>(null);
+  const summaryMeasureRef = useRef<HTMLDivElement | null>(null);
+  const [inlineSummaryOnLastCredentialPage, setInlineSummaryOnLastCredentialPage] =
+    useState(false);
+  const credentialPages = 1 + pages.overflow.length;
+  const summaryPageNumber = credentialPages + 1;
+  const notesPageNumber = credentialPages + (inlineSummaryOnLastCredentialPage ? 1 : 2);
+  const totalPages = credentialPages + (inlineSummaryOnLastCredentialPage ? 1 : 2);
   const institutionName = displayValue(
     customization.institutionName,
     record.institution.name,
@@ -190,6 +199,73 @@ export function TranscriptPreview({
   const footerText =
     customization.footerText.trim() ||
     `${institutionName} | Official academic record prepared from CLR data`;
+
+  useLayoutEffect(() => {
+    let frameOne = 0;
+    let frameTwo = 0;
+
+    const measurePlacement = () => {
+      const summaryAnchor = summaryAnchorRef.current;
+      const footer = footerRef.current;
+      const summaryMeasure = summaryMeasureRef.current;
+
+      if (!summaryAnchor || !footer || !summaryMeasure) {
+        setInlineSummaryOnLastCredentialPage(false);
+        return;
+      }
+
+      const availableHeight =
+        footer.getBoundingClientRect().top - summaryAnchor.getBoundingClientRect().bottom;
+      const requiredHeight = summaryMeasure.getBoundingClientRect().height + 8;
+
+      setInlineSummaryOnLastCredentialPage(availableHeight >= requiredHeight);
+    };
+
+    frameOne = window.requestAnimationFrame(() => {
+      frameTwo = window.requestAnimationFrame(measurePlacement);
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameOne);
+      window.cancelAnimationFrame(frameTwo);
+    };
+  }, [
+    activeTemplate,
+    pages.cover.length,
+    pages.overflow.length,
+    record.learner.profileSummary,
+    record.summary.topSkills,
+  ]);
+
+  function renderSummaryAndSkills() {
+    return (
+      <div className={styles.bottomGrid}>
+        <section className={styles.compactPanel}>
+          <p className={styles.panelTitle}>Learner Summary</p>
+          <p className={styles.panelCopy}>{record.learner.profileSummary}</p>
+        </section>
+
+        <section className={`${styles.compactPanel} ${styles.skillsPanel}`}>
+          <p className={styles.panelTitle}>Acquired Skills</p>
+          {activeTemplate === "minimal" ? (
+            <p className={styles.inlineMetaList}>
+              {record.summary.topSkills.length > 0
+                ? record.summary.topSkills.join(", ")
+                : "No skills were recorded."}
+            </p>
+          ) : (
+            <div className={styles.skillList}>
+              {record.summary.topSkills.length > 0 ? (
+                record.summary.topSkills.map((skill) => renderSkillTag(skill, skill))
+              ) : (
+                <span className={styles.summaryText}>No skills were recorded.</span>
+              )}
+            </div>
+          )}
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -354,35 +430,13 @@ export function TranscriptPreview({
           </table>
         </section>
 
-        <div className={styles.bottomGrid}>
-          <section className={styles.compactPanel}>
-            <p className={styles.panelTitle}>Learner Summary</p>
-            <p className={styles.panelCopy}>{record.learner.profileSummary}</p>
-          </section>
+        {pages.overflow.length === 0 ? <div ref={summaryAnchorRef} /> : null}
 
-          <section className={`${styles.compactPanel} ${styles.skillsPanel}`}>
-            <p className={styles.panelTitle}>Acquired Skills</p>
-            {activeTemplate === "minimal" ? (
-              <p className={styles.inlineMetaList}>
-                {record.summary.topSkills.length > 0
-                  ? record.summary.topSkills.join(", ")
-                  : "No skills were recorded."}
-              </p>
-            ) : (
-              <div className={styles.skillList}>
-                {record.summary.topSkills.length > 0 ? (
-                  record.summary.topSkills.map((skill) => (
-                    renderSkillTag(skill, skill)
-                  ))
-                ) : (
-                  <span className={styles.summaryText}>No skills were recorded.</span>
-                )}
-              </div>
-            )}
-          </section>
-        </div>
+        {pages.overflow.length === 0 && inlineSummaryOnLastCredentialPage
+          ? renderSummaryAndSkills()
+          : null}
 
-        <footer className={styles.footer}>
+        <footer className={styles.footer} ref={pages.overflow.length === 0 ? footerRef : null}>
           <p>{footerText}</p>
           <span className={styles.pageCounter}>Page 1 of {totalPages}</span>
         </footer>
@@ -397,7 +451,7 @@ export function TranscriptPreview({
           <header className={styles.compactHeader}>
             <div>
               <p className={styles.titleEyebrow}>{institutionName}</p>
-              <h2 className={styles.overflowTitle}>Additional Credential Records</h2>
+              <h2 className={styles.overflowTitle}>Credential and Achievement Listing</h2>
             </div>
             <div className={styles.compactHeaderMeta}>
               <span>{record.learner.fullName}</span>
@@ -421,7 +475,16 @@ export function TranscriptPreview({
             </table>
           </section>
 
-          <footer className={styles.footer}>
+          {index === pages.overflow.length - 1 ? <div ref={summaryAnchorRef} /> : null}
+
+          {index === pages.overflow.length - 1 && inlineSummaryOnLastCredentialPage
+            ? renderSummaryAndSkills()
+            : null}
+
+          <footer
+            className={styles.footer}
+            ref={index === pages.overflow.length - 1 ? footerRef : null}
+          >
             <p>{footerText}</p>
             <span className={styles.pageCounter}>
               Page {index + 2} of {totalPages}
@@ -429,6 +492,34 @@ export function TranscriptPreview({
           </footer>
         </section>
       ))}
+
+      {!inlineSummaryOnLastCredentialPage ? (
+        <section className={styles.sheet} data-transcript-page>
+          <header className={styles.compactHeader}>
+            <div>
+              <p className={styles.titleEyebrow}>{institutionName}</p>
+              <h2 className={styles.overflowTitle}>Learner Summary and Acquired Skills</h2>
+            </div>
+            <div className={styles.compactHeaderMeta}>
+              <span>{record.learner.fullName}</span>
+              <span>{studentNumber}</span>
+            </div>
+          </header>
+
+          {renderSummaryAndSkills()}
+
+          <footer className={styles.footer}>
+            <p>{footerText}</p>
+            <span className={styles.pageCounter}>
+              Page {summaryPageNumber} of {totalPages}
+            </span>
+          </footer>
+        </section>
+      ) : null}
+
+      <div className={styles.summaryMeasure} aria-hidden="true" ref={summaryMeasureRef}>
+        {renderSummaryAndSkills()}
+      </div>
 
       <section className={styles.sheet} data-transcript-page>
         <header className={styles.compactHeader}>
@@ -529,7 +620,9 @@ export function TranscriptPreview({
 
         <footer className={styles.footer}>
           <p>{footerText}</p>
-          <span className={styles.pageCounter}>Page {totalPages} of {totalPages}</span>
+          <span className={styles.pageCounter}>
+            Page {notesPageNumber} of {totalPages}
+          </span>
         </footer>
       </section>
     </div>

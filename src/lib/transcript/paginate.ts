@@ -22,33 +22,33 @@ function estimateCourseRowUnits(course: TranscriptCourse) {
     (skill) => Boolean(skill.proficiencyLevel),
   );
 
-  let units = 2;
+  let units = 3;
 
-  if (course.title.length > 72) {
+  if (course.title.length > 60) {
     units += 1;
   }
 
-  if (course.code.length > 18) {
+  if (course.code.length > 14) {
     units += 1;
   }
 
-  if (course.summary.length > 110) {
+  if (course.summary.length > 90) {
     units += 1;
   }
 
-  if (course.summary.length > 220) {
+  if (course.summary.length > 170) {
     units += 1;
   }
 
-  if (renderedSkills.length > 3) {
+  if (renderedSkills.length > 2) {
     units += 1;
   }
 
-  if (totalSkillCharacters > 42) {
+  if (totalSkillCharacters > 30) {
     units += 1;
   }
 
-  if (totalSkillCharacters > 84) {
+  if (totalSkillCharacters > 60) {
     units += 1;
   }
 
@@ -56,7 +56,7 @@ function estimateCourseRowUnits(course: TranscriptCourse) {
     units += 1;
   }
 
-  if (course.status.length > 16) {
+  if (course.status.length > 12) {
     units += 1;
   }
 
@@ -87,31 +87,42 @@ function takePage(
 
   return {
     page,
+    usedCapacity,
     nextIndex,
   };
 }
 
 export function paginateCourses(
   courses: TranscriptCourse[],
-  firstPageCapacity = 20,
-  laterPageCapacity = 28,
+  firstPageCapacity = 18,
+  laterPageCapacity = 24,
 ) {
-  const { page: cover, nextIndex: coverEndIndex } = takePage(
+  const {
+    page: cover,
+    usedCapacity: coverUsedCapacity,
+    nextIndex: coverEndIndex,
+  } = takePage(
     courses,
     0,
     firstPageCapacity,
   );
   const overflow: TranscriptCourse[][] = [];
+  const overflowUsedCapacity: number[] = [];
   let nextIndex = coverEndIndex;
 
   while (nextIndex < courses.length) {
     const nextPage = takePage(courses, nextIndex, laterPageCapacity);
     overflow.push(nextPage.page);
+    overflowUsedCapacity.push(nextPage.usedCapacity);
     nextIndex = nextPage.nextIndex;
   }
 
   return {
     cover,
+    coverUsedCapacity,
     overflow,
+    overflowUsedCapacity,
+    firstPageCapacity,
+    laterPageCapacity,
   };
 }

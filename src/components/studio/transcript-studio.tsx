@@ -64,13 +64,13 @@ export function TranscriptStudio() {
   }
 
   async function handleDownloadPdf() {
-    if (!previewRef.current) {
-      return;
-    }
-
     try {
       await downloadTranscriptPdf(
-        previewRef.current,
+        {
+          record: transcript,
+          customization: custom,
+          template: custom.template,
+        },
         makeFilename(transcript.learner.fullName),
       );
     } catch (error) {

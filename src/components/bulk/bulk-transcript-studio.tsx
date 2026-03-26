@@ -1,7 +1,6 @@
 "use client";
 
 import { startTransition, useEffect, useRef, useState } from "react";
-import { flushSync } from "react-dom";
 import JSZip from "jszip";
 import { StudioSwitcher } from "@/components/navigation/studio-switcher";
 import { TranscriptPreview } from "@/components/transcript/transcript-preview";
@@ -19,6 +18,7 @@ import {
 } from "@/lib/bulk/import";
 import { downloadBlob } from "@/lib/files/download";
 import { getTranscriptPdfBlob } from "@/lib/transcript/pdf";
+import type { TranscriptPdfPayload } from "@/lib/transcript/pdf-payload";
 import { transcriptTemplateOptions } from "@/lib/transcript/templates";
 import styles from "./bulk-transcript-studio.module.css";
 
@@ -35,11 +35,6 @@ interface GeneratedSession {
   settings: BulkGlobalSettings;
   sourceRevision: number;
   settingsRevision: number;
-}
-
-interface BatchPreviewState {
-  record: BulkGeneratedLearnerRecord;
-  settings: BulkGlobalSettings;
 }
 
 interface GenerationProgress {
@@ -156,7 +151,6 @@ function migrateBulkSettings(
 
 export function BulkTranscriptStudio() {
   const previewRef = useRef<HTMLDivElement | null>(null);
-  const batchPreviewRef = useRef<HTMLDivElement | null>(null);
   const generationRunRef = useRef(0);
   const [settings, setSettings] = useState<BulkGlobalSettings>(
     defaultBulkGlobalSettings,
@@ -187,9 +181,6 @@ export function BulkTranscriptStudio() {
   const [generatedSession, setGeneratedSession] = useState<GeneratedSession | null>(
     null,
   );
-  const [batchPreviewState, setBatchPreviewState] =
-    useState<BatchPreviewState | null>(null);
-
   const importedGroups = groupBulkImportRows(sourceRows);
   const generatedRecords = generatedSession?.records;
   const draftSelectedGroup =
@@ -497,7 +488,6 @@ export function BulkTranscriptStudio() {
       );
       setBusyMessage("");
     } finally {
-      setBatchPreviewState(null);
       setExportProgress(idleExportProgress);
     }
   }
@@ -510,22 +500,22 @@ export function BulkTranscriptStudio() {
     downloadJson(selectedRecord.clr, makeClrFilename(selectedRecord));
   }
 
+  function createPdfPayload(
+    record: BulkGeneratedLearnerRecord,
+    sessionSettings: BulkGlobalSettings,
+  ): TranscriptPdfPayload {
+    return {
+      record: record.transcript,
+      customization: buildBulkTranscriptCustomization(sessionSettings),
+      template: sessionSettings.template,
+    };
+  }
+
   async function renderPdfForRecord(
     record: BulkGeneratedLearnerRecord,
     sessionSettings: BulkGlobalSettings,
   ) {
-    flushSync(() => {
-      setBatchPreviewState({ record, settings: sessionSettings });
-    });
-
-    await waitForUiFrame();
-    await waitForUiFrame();
-
-    if (!batchPreviewRef.current) {
-      throw new Error("The hidden transcript renderer is not ready.");
-    }
-
-    return getTranscriptPdfBlob(batchPreviewRef.current);
+    return getTranscriptPdfBlob(createPdfPayload(record, sessionSettings));
   }
 
   async function handleDownloadRecordPdf(record: BulkGeneratedLearnerRecord) {
@@ -552,7 +542,6 @@ export function BulkTranscriptStudio() {
       );
       setBusyMessage("");
     } finally {
-      setBatchPreviewState(null);
       setExportProgress(idleExportProgress);
     }
   }
@@ -667,7 +656,6 @@ export function BulkTranscriptStudio() {
       );
       setBusyMessage("");
     } finally {
-      setBatchPreviewState(null);
       setExportProgress(idleExportProgress);
     }
   }
@@ -1268,17 +1256,6 @@ export function BulkTranscriptStudio() {
           </section>
         </div>
       </section>
-
-      <div className={styles.batchStage} aria-hidden="true">
-        {batchPreviewState ? (
-          <TranscriptPreview
-            record={batchPreviewState.record.transcript}
-            customization={buildBulkTranscriptCustomization(batchPreviewState.settings)}
-            previewRef={batchPreviewRef}
-            template={batchPreviewState.settings.template}
-          />
-        ) : null}
-      </div>
     </main>
   );
 }

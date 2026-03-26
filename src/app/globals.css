@@ -78,13 +78,15 @@ textarea {
 }
 
 @page {
-  size: A4 landscape;
-  margin: 10mm;
+  size: 297mm 210mm;
+  margin: 0;
 }
 
 @media print {
+  html,
   body {
     background: #ffffff;
+    margin: 0;
   }
 
   [data-no-print] {
@@ -93,16 +95,23 @@ textarea {
 
   [data-transcript-root] {
     padding: 0 !important;
+    gap: 0 !important;
     background: #ffffff !important;
   }
 
   [data-transcript-page] {
-    width: 100% !important;
-    min-height: calc(210mm - 20mm) !important;
+    width: 297mm !important;
+    min-height: 210mm !important;
+    overflow: visible !important;
+    margin: 0 !important;
     border: none !important;
     box-shadow: none !important;
-    margin: 0 0 6mm !important;
-    page-break-after: always;
-    break-after: page;
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  [data-transcript-page] + [data-transcript-page] {
+    page-break-before: always;
+    break-before: page;
   }
 }
