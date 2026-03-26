@@ -48,24 +48,10 @@ async function waitForRenderableState(root: HTMLElement) {
 
 function getPageSizePx(page: HTMLElement) {
   const bounds = page.getBoundingClientRect();
-  const documentElement = page.ownerDocument.documentElement;
 
   return {
-    // Use ceil + scroll dimensions so the rendered canvas never truncates the
-    // final rows when content is close to page boundaries.
-    width: Math.max(
-      Math.ceil(bounds.width),
-      page.offsetWidth,
-      page.scrollWidth,
-      documentElement.clientWidth,
-      1,
-    ),
-    height: Math.max(
-      Math.ceil(bounds.height),
-      page.offsetHeight,
-      page.scrollHeight,
-      1,
-    ),
+    width: Math.max(Math.round(bounds.width), page.offsetWidth, 1),
+    height: Math.max(Math.round(bounds.height), page.offsetHeight, 1),
   };
 }
 
@@ -110,8 +96,6 @@ async function buildTranscriptPdf(root: HTMLElement) {
       const pageSize = getPageSizePx(page);
       const targetWidthMm = (pageSize.width * 25.4) / 96;
       const targetHeightMm = (pageSize.height * 25.4) / 96;
-      const pageViewportWidth = Math.max(viewportWidth, pageSize.width);
-      const pageViewportHeight = Math.max(viewportHeight, pageSize.height);
       const canvas = await html2canvas(page, {
         backgroundColor: "#ffffff",
         scale: renderScale,
@@ -119,8 +103,8 @@ async function buildTranscriptPdf(root: HTMLElement) {
         logging: false,
         width: pageSize.width,
         height: pageSize.height,
-        windowWidth: pageViewportWidth,
-        windowHeight: pageViewportHeight,
+        windowWidth: viewportWidth,
+        windowHeight: viewportHeight,
         imageTimeout: 0,
         removeContainer: true,
       });

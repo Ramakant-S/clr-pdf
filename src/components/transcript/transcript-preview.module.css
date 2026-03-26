@@ -495,7 +495,6 @@
 .codeChip {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   min-height: 20px;
   margin-top: 5px;
   padding: 0 8px;
@@ -506,9 +505,8 @@
   font-family: var(--template-font-accent), sans-serif;
   font-size: 0.52rem;
   font-weight: 700;
-  line-height: 1.05;
+  line-height: 1;
   white-space: nowrap;
-  vertical-align: middle;
 }
 
 .summaryText {
@@ -540,9 +538,6 @@
 }
 
 .skillTagName {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   font-size: 0.56rem;
   font-weight: 700;
   line-height: 1.16;
@@ -567,7 +562,6 @@
   align-items: center;
   justify-content: center;
   min-height: 20px;
-  box-sizing: border-box;
   max-width: 100%;
   padding: 3px 8px;
   border-radius: var(--template-chip-radius);
@@ -580,7 +574,6 @@
   text-align: center;
   letter-spacing: 0;
   word-spacing: normal;
-  vertical-align: middle;
 }
 
 .statusPill {
@@ -588,7 +581,6 @@
   align-items: center;
   justify-content: center;
   min-height: 20px;
-  box-sizing: border-box;
   max-width: 100%;
   padding: 3px 8px;
   border-radius: var(--template-chip-radius);
@@ -601,7 +593,6 @@
   text-align: center;
   letter-spacing: 0;
   word-spacing: normal;
-  vertical-align: middle;
 }
 
 .inlineMetaText,
