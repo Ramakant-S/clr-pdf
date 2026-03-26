@@ -429,21 +429,26 @@
 
 .table th:nth-child(2),
 .table td:nth-child(2) {
-  width: 230px;
+  width: 110px;
 }
 
 .table th:nth-child(3),
 .table td:nth-child(3) {
-  width: 68px;
+  width: 210px;
 }
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-  width: 90px;
+  width: 68px;
 }
 
 .table th:nth-child(5),
 .table td:nth-child(5) {
+  width: 90px;
+}
+
+.table th:nth-child(6),
+.table td:nth-child(6) {
   width: 112px;
 }
 
@@ -492,6 +497,20 @@
   font-size: 0.56rem;
   font-weight: 600;
   line-height: 1.2;
+}
+
+.typeBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 18px;
+  padding: 0 7px;
+  border-radius: var(--template-chip-radius);
+  background: rgba(19, 33, 45, 0.06);
+  color: var(--template-accent-strong);
+  font-size: 0.54rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .skillsPanel {
@@ -682,6 +701,7 @@
 }
 
 .templateScholar .codeChip,
+.templateScholar .typeBadge,
 .templateScholar .skillTag,
 .templateScholar .statusPill {
   border-radius: 8px;
@@ -810,6 +830,7 @@
 }
 
 .templateModern .codeChip,
+.templateModern .typeBadge,
 .templateModern .skillTag,
 .templateModern .statusPill {
   background: linear-gradient(135deg, #2d8760 0%, #246a4b 100%);
@@ -906,11 +927,13 @@
 }
 
 .templateExecutive .codeChip,
+.templateExecutive .typeBadge,
 .templateExecutive .skillTag,
 .templateExecutive .statusPill {
   border-radius: 6px;
 }
 
+.templateExecutive .typeBadge,
 .templateExecutive .skillTag {
   background: linear-gradient(135deg, #1f4d7a 0%, #163a5b 100%);
   color: #f4f8fc;
@@ -1044,6 +1067,7 @@
 }
 
 .templateLedger .codeChip,
+.templateLedger .typeBadge,
 .templateLedger .skillTag,
 .templateLedger .statusPill {
   border-radius: 2px;
@@ -1052,6 +1076,7 @@
 }
 
 .templateLedger .codeChip,
+.templateLedger .typeBadge,
 .templateLedger .skillTag {
   background: #f0f0f0;
 }
@@ -1171,6 +1196,7 @@
 }
 
 .templateMinimal .skillTag,
+.templateMinimal .typeBadge,
 .templateMinimal .statusPill {
   background: transparent;
   border: 1px solid rgba(95, 108, 121, 0.22);

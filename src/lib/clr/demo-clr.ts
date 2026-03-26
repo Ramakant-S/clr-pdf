@@ -45,6 +45,7 @@ export const demoClrPayload = {
           achievement: {
             id: "https://ibu.ca/demo/achievements/eng4u",
             type: ["Achievement"],
+            achievementType: "coursework",
             name: "English Literature and Composition",
             description:
               "Advanced analytical reading, persuasive writing, and seminar leadership with a focus on comparative texts.",
@@ -76,6 +77,7 @@ export const demoClrPayload = {
           achievement: {
             id: "https://ibu.ca/demo/achievements/mcv4u",
             type: ["Achievement"],
+            achievementType: "coursework",
             name: "Calculus and Vectors",
             description:
               "Problem-solving in functions, derivatives, vectors, and mathematical modelling for university preparation.",
@@ -107,6 +109,7 @@ export const demoClrPayload = {
           achievement: {
             id: "https://ibu.ca/demo/achievements/sbi4u",
             type: ["Achievement"],
+            achievementType: "assessment",
             name: "Biology: Systems and Genetics",
             description:
               "Laboratory-led study of molecular genetics, homeostasis, and population systems supported by inquiry journals.",
@@ -138,6 +141,7 @@ export const demoClrPayload = {
           achievement: {
             id: "https://ibu.ca/demo/achievements/cia4u",
             type: ["Achievement"],
+            achievementType: "coursework",
             name: "Economics and Public Policy",
             description:
               "Macroeconomic analysis, civic policy review, and debate-based presentations tied to local and global case studies.",
@@ -169,6 +173,7 @@ export const demoClrPayload = {
           achievement: {
             id: "https://ibu.ca/demo/achievements/ics4u",
             type: ["Achievement"],
+            achievementType: "live project",
             name: "Computer Science and Application Design",
             description:
               "Software design, collaborative debugging, and full-stack prototyping with documented testing and code review.",
@@ -200,6 +205,7 @@ export const demoClrPayload = {
           achievement: {
             id: "https://ibu.ca/demo/achievements/capstone",
             type: ["Achievement"],
+            achievementType: "internship",
             name: "Leadership Capstone and Career Readiness",
             description:
               "Portfolio defence, internship reflection, and service-learning artefacts demonstrating readiness for post-secondary study.",

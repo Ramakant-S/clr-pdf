@@ -1,5 +1,6 @@
 import { demoClrPayload } from "@/lib/clr/demo-clr";
 import { defaultInstitutionBranding } from "@/lib/branding/defaults";
+import { resolveTranscriptEntryType } from "@/lib/clr/entry-type";
 import type {
   SourceMode,
   TranscriptCourse,
@@ -379,7 +380,7 @@ function normalizeCourse(
       ) ?? achievement?.identifier,
     ) ??
     extractIdentifier(subject?.identifier) ??
-    `CRS-${String(index + 1).padStart(3, "0")}`;
+    `ACH-${String(index + 1).padStart(3, "0")}`;
 
   const startDateSource = pickString(
     achievement?.startDate,
@@ -399,7 +400,22 @@ function normalizeCourse(
       achievement?.description,
       credential.description,
       results.find((entry) => /comment|remark|summary/i.test(entry.label))?.value,
-    ) ?? "Verified course achievement imported from the learner credential record.";
+    ) ?? "Verified credential achievement imported from the learner credential record.";
+
+  const credentialType = resolveTranscriptEntryType(
+    pickString(
+      achievement?.achievementType,
+      achievement?.credentialType,
+      subject?.achievementType,
+      subject?.credentialType,
+      credential.achievementType,
+      credential.credentialType,
+    ),
+    ...readTypeList(achievement),
+    ...readTypeList(credential),
+    pickString(achievement?.name, credential.name),
+    summary,
+  );
 
   const creditsValue =
     parseNumber(getValue(achievement, "creditsAvailable.value")) ??
@@ -410,8 +426,10 @@ function normalizeCourse(
   return {
     id: pickString(credential.id, achievement?.id) ?? `${courseCode}-${index + 1}`,
     title:
-      pickString(achievement?.name, subject?.name, credential.name) ?? `Course ${index + 1}`,
+      pickString(achievement?.name, subject?.name, credential.name) ??
+      `Achievement ${index + 1}`,
     code: courseCode,
+    credentialType,
     issuer: issuer.name,
     term:
       pickString(
@@ -440,10 +458,10 @@ function normalizeCourse(
 
 function buildProfileSummary(learnerName: string, topSkills: string[]): string {
   if (topSkills.length === 0) {
-    return `${learnerName} has a verified set of course achievements recorded in the CLR and organized here in transcript format.`;
+    return `${learnerName} has verified credential and achievement entries recorded in the CLR and organized here in transcript format.`;
   }
 
-  return `${learnerName} demonstrates consistent performance across coursework with emphasis on ${topSkills
+  return `${learnerName} demonstrates consistent performance across credentialed learning with emphasis on ${topSkills
     .slice(0, 3)
     .join(", ")
     .toLowerCase()}.`;
@@ -501,7 +519,7 @@ export function normalizeClrDocument(
 
   if (courses.length === 0) {
     throw new Error(
-      "No course-like achievements were found in the CLR payload. Provide a CLR with embedded credentials or achievement records.",
+      "No credential or achievement entries were found in the CLR payload. Provide a CLR with embedded credentials or achievement records.",
     );
   }
 
@@ -580,7 +598,7 @@ export function normalizeClrDocument(
     courses,
     notes: [
       "This transcript is a print-oriented summary generated from a verified CLR/Open Badge record.",
-      "Course labels reflect credential achievements normalized into transcript format for academic review.",
+      "Credential and achievement entries are normalized into transcript format for academic review.",
       "The QR code links back to the source credential URL when one is available.",
     ],
     gradeLegend,

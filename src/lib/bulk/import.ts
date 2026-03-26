@@ -1,8 +1,14 @@
 import * as XLSX from "xlsx";
 import { defaultTranscriptCustomization } from "@/lib/branding/defaults";
+import {
+  normalizeTranscriptEntryType,
+  resolveTranscriptEntryType,
+} from "@/lib/clr/entry-type";
 import { normalizeClrDocument } from "@/lib/clr/normalize";
+import { transcriptEntryTypes } from "@/lib/clr/types";
 import type {
   TranscriptCustomization,
+  TranscriptEntryType,
   TranscriptRecord,
   TranscriptTemplate,
 } from "@/lib/clr/types";
@@ -48,6 +54,7 @@ export interface BulkImportRow {
   guardianEmail: string;
   guardianPhone: string;
   verificationUrl: string;
+  credentialType: string;
   courseCode: string;
   courseTitle: string;
   courseTerm: string;
@@ -117,7 +124,7 @@ export const bulkImportColumns: BulkColumn[] = [
   {
     key: "learnerId",
     required: true,
-    description: "Unique learner key repeated on every course row for that student.",
+    description: "Unique learner key repeated on every credential row for that student.",
   },
   {
     key: "studentNumber",
@@ -182,7 +189,7 @@ export const bulkImportColumns: BulkColumn[] = [
   {
     key: "academicYear",
     required: false,
-    description: "Academic year or session associated with the course row.",
+    description: "Academic year or session associated with the credential row.",
   },
   {
     key: "reportingPeriod",
@@ -240,14 +247,20 @@ export const bulkImportColumns: BulkColumn[] = [
     description: "Base verification URL repeated across learner rows if available.",
   },
   {
+    key: "credentialType",
+    required: false,
+    description:
+      "Credential entry type: coursework, internship, live project, or assessment.",
+  },
+  {
     key: "courseCode",
     required: true,
-    description: "Course or achievement code.",
+    description: "Credential or achievement code.",
   },
   {
     key: "courseTitle",
     required: true,
-    description: "Course title shown in the transcript table.",
+    description: "Credential or achievement title shown in the transcript table.",
   },
   {
     key: "courseTerm",
@@ -272,7 +285,7 @@ export const bulkImportColumns: BulkColumn[] = [
   {
     key: "creditsEarned",
     required: false,
-    description: "Credits earned for the course row.",
+    description: "Credits earned for the credential row.",
   },
   {
     key: "grade",
@@ -352,6 +365,7 @@ const emptyBulkImportRow: BulkImportRow = {
   guardianEmail: "",
   guardianPhone: "",
   verificationUrl: "",
+  credentialType: "",
   courseCode: "",
   courseTitle: "",
   courseTerm: "",
@@ -400,6 +414,13 @@ function splitSkills(value: string) {
     .split("|")
     .map((entry) => entry.trim())
     .filter(Boolean);
+}
+
+function formatEntryTypeToken(entryType: TranscriptEntryType) {
+  return entryType
+    .split(" ")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
 }
 
 function slugify(value: string) {
@@ -517,6 +538,9 @@ function mapRawRow(input: Record<string, unknown>) {
     row.verificationUrl = `https://bulk.import.local/clr/${slugify(row.studentNumber)}`;
   }
 
+  const normalizedType = normalizeTranscriptEntryType(row.credentialType);
+  row.credentialType = normalizedType ?? row.credentialType.trim().toLowerCase();
+
   return row;
 }
 
@@ -533,6 +557,12 @@ function validateRow(row: BulkImportRow, rowNumber: number) {
     }
   }
 
+  if (row.credentialType && !normalizeTranscriptEntryType(row.credentialType)) {
+    issues.push(
+      `Row ${rowNumber}: "credentialType" must be one of ${transcriptEntryTypes.join(", ")}.`,
+    );
+  }
+
   return issues;
 }
 
@@ -544,10 +574,10 @@ function buildProfileSummary(rows: BulkImportRow[]) {
 
   const skillPool = [...new Set(rows.flatMap((row) => splitSkills(row.skillNames)))].slice(0, 3);
   if (skillPool.length === 0) {
-    return `${rows[0]?.fullName ?? "Learner"} has verified coursework imported from the bulk CLR template.`;
+    return `${rows[0]?.fullName ?? "Learner"} has verified credential and achievement entries imported from the bulk CLR template.`;
   }
 
-  return `${rows[0]?.fullName ?? "Learner"} shows consistent achievement across ${skillPool.join(", ").toLowerCase()} and related academic work.`;
+  return `${rows[0]?.fullName ?? "Learner"} shows consistent achievement across ${skillPool.join(", ").toLowerCase()} and related credentialed work.`;
 }
 
 function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings): JsonRecord {
@@ -608,6 +638,11 @@ function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings
         const baseCourseUrl = `${verificationUrl.replace(/\/$/, "")}/course/${slugify(row.courseCode || row.courseTitle || String(index + 1))}`;
         const creditsValue = toNumber(row.creditsEarned);
         const attendanceValue = toNumber(row.attendancePercent);
+        const entryType = resolveTranscriptEntryType(
+          row.credentialType,
+          row.courseTitle,
+          row.courseSummary,
+        );
 
         return {
           id: baseCourseUrl,
@@ -621,7 +656,9 @@ function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings
             id: `did:bulk:${slugify(primary.learnerId || primary.studentNumber || primary.fullName)}`,
             achievement: {
               id: `${baseCourseUrl}/achievement`,
-              type: ["Achievement"],
+              type: ["Achievement", formatEntryTypeToken(entryType)],
+              achievementType: entryType,
+              credentialType: entryType,
               name: row.courseTitle,
               description:
                 row.courseSummary ||
@@ -729,6 +766,7 @@ export function createSampleBulkRows(learnerCount = 50) {
     {
       code: "ENG401",
       title: "Advanced English Composition",
+      credentialType: "coursework",
       term: "Semester 1",
       department: "Languages",
       skills: "Analytical Writing | Discussion Leadership | Research Synthesis",
@@ -737,6 +775,7 @@ export function createSampleBulkRows(learnerCount = 50) {
     {
       code: "MAT402",
       title: "Applied Mathematics and Modelling",
+      credentialType: "coursework",
       term: "Semester 1",
       department: "Mathematics",
       skills: "Quantitative Reasoning | Problem Solving | Modelling",
@@ -744,7 +783,8 @@ export function createSampleBulkRows(learnerCount = 50) {
     },
     {
       code: "SCI403",
-      title: "Integrated Science Laboratory",
+      title: "Integrated Science Laboratory Assessment",
+      credentialType: "assessment",
       term: "Semester 1",
       department: "Sciences",
       skills: "Scientific Inquiry | Evidence Evaluation | Lab Documentation",
@@ -752,7 +792,8 @@ export function createSampleBulkRows(learnerCount = 50) {
     },
     {
       code: "CSC404",
-      title: "Computer Science and Application Design",
+      title: "Computer Science Live Project",
+      credentialType: "live project",
       term: "Semester 2",
       department: "Innovation",
       skills: "Programming | Debugging | Collaboration",
@@ -760,7 +801,8 @@ export function createSampleBulkRows(learnerCount = 50) {
     },
     {
       code: "ECO405",
-      title: "Economics and Public Policy",
+      title: "Industry Internship: Economics and Public Policy",
+      credentialType: "internship",
       term: "Semester 2",
       department: "Humanities",
       skills: "Policy Analysis | Data Interpretation | Presentation",
@@ -812,6 +854,7 @@ export function createSampleBulkRows(learnerCount = 50) {
         guardianEmail: `guardian.${slugify(lastName)}${learnerIndex + 1}@samplemail.com`,
         guardianPhone: `+91-98888${String(learnerIndex + 2000).slice(-4)}`,
         verificationUrl,
+        credentialType: course.credentialType,
         courseCode: course.code,
         courseTitle: course.title,
         courseTerm: course.term,
@@ -892,7 +935,7 @@ export function parseBulkWorkbook(buffer: ArrayBuffer): BulkParseResult {
   });
 
   if (rows.length === 0) {
-    throw new Error("The uploaded file did not contain any learner-course rows.");
+    throw new Error("The uploaded file did not contain any learner credential rows.");
   }
 
   return { rows, warnings, sheetName };

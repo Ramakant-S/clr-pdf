@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import { defaultInstitutionBranding, isIbuBranding } from "@/lib/branding/defaults";
+import { formatTranscriptEntryType } from "@/lib/clr/entry-type";
 import { paginateCourses } from "@/lib/transcript/paginate";
 import type {
   TranscriptCourse,
@@ -28,9 +29,9 @@ function renderCourseRows(courses: TranscriptCourse[]) {
   if (courses.length === 0) {
     return (
       <tr>
-        <td colSpan={5}>
+        <td colSpan={6}>
           <p className={styles.summaryText}>
-            No course achievements were available in the supplied CLR source.
+            No credential or achievement entries were available in the supplied CLR source.
           </p>
         </td>
       </tr>
@@ -45,6 +46,11 @@ function renderCourseRows(courses: TranscriptCourse[]) {
           <span className={styles.codeChip}>{course.code}</span>
         </div>
         <p className={styles.summaryText}>{course.summary}</p>
+      </td>
+      <td>
+        <span className={styles.typeBadge}>
+          {formatTranscriptEntryType(course.credentialType)}
+        </span>
       </td>
       <td>
         <div className={styles.skillList}>
@@ -162,7 +168,7 @@ export function TranscriptPreview({
             <p className={styles.titleEyebrow}>Official Academic Transcript</p>
             <h1 className={styles.documentTitle}>Comprehensive Learner Record Summary</h1>
             <p className={styles.titleCopy}>
-              Transcript format prepared from a verified CLR for print and archival use.
+              Transcript format prepared from verified credential and achievement data for print and archival use.
             </p>
           </div>
 
@@ -237,7 +243,7 @@ export function TranscriptPreview({
 
             <div className={styles.summaryGrid}>
               <div className={styles.summaryCard}>
-                <span className={styles.label}>Courses</span>
+                <span className={styles.label}>Credential Entries</span>
                 <strong>{record.summary.totalCourses}</strong>
               </div>
               <div className={styles.summaryCard}>
@@ -263,10 +269,10 @@ export function TranscriptPreview({
         <section className={styles.tablePanel}>
           <div className={styles.tableHeader}>
             <div>
-              <p className={styles.tableTitle}>Course Listing</p>
+              <p className={styles.tableTitle}>Credential and Achievement Listing</p>
               <p className={styles.tableHint}>
-                Each CLR achievement is presented as a course entry with summary,
-                grade, credits, and recorded result.
+                Each CLR achievement is presented as a credential entry with type,
+                summary, skills, grade, credits, and recorded result.
               </p>
             </div>
             <span className={styles.label}>Transcript Page 1</span>
@@ -275,7 +281,8 @@ export function TranscriptPreview({
           <table className={styles.table}>
             <thead>
               <tr>
-                <th>Course and Summary</th>
+                <th>Credential / Achievement</th>
+                <th>Type</th>
                 <th>Skills Earned</th>
                 <th>Grade</th>
                 <th>Credits</th>
@@ -323,7 +330,7 @@ export function TranscriptPreview({
           <header className={styles.compactHeader}>
             <div>
               <p className={styles.titleEyebrow}>{institutionName}</p>
-              <h2 className={styles.overflowTitle}>Additional Course Records</h2>
+              <h2 className={styles.overflowTitle}>Additional Credential Records</h2>
             </div>
             <div className={styles.compactHeaderMeta}>
               <span>{record.learner.fullName}</span>
@@ -335,7 +342,8 @@ export function TranscriptPreview({
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Course and Summary</th>
+                  <th>Credential / Achievement</th>
+                  <th>Type</th>
                   <th>Skills Earned</th>
                   <th>Grade</th>
                   <th>Credits</th>

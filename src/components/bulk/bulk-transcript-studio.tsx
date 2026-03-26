@@ -164,10 +164,22 @@ export function BulkTranscriptStudio() {
 
   const importedGroups = groupBulkImportRows(sourceRows);
   const generatedRecords = generatedSession?.records;
+  const draftSelectedGroup =
+    importedGroups.find((group) => group.learnerId === selectedLearnerId) ??
+    importedGroups[0];
+  let draftPreviewRecord: BulkGeneratedLearnerRecord | null = null;
+  try {
+    if (!generatedSession && draftSelectedGroup) {
+      draftPreviewRecord = buildBulkLearnerRecord(draftSelectedGroup, settings);
+    }
+  } catch {
+    draftPreviewRecord = null;
+  }
   const selectedRecord =
     generatedRecords?.find((record) => record.learnerId === selectedLearnerId) ??
     generatedRecords?.[0];
-  const generatedCustomization = buildBulkTranscriptCustomization(
+  const activePreviewRecord = selectedRecord ?? draftPreviewRecord;
+  const activePreviewCustomization = buildBulkTranscriptCustomization(
     generatedSession?.settings ?? settings,
   );
   const hasGeneratedOutput =
@@ -206,9 +218,6 @@ export function BulkTranscriptStudio() {
 
   useEffect(() => {
     if (!generatedSession || generatedSession.records.length === 0) {
-      if (selectedLearnerId) {
-        setSelectedLearnerId("");
-      }
       return;
     }
 
@@ -220,6 +229,16 @@ export function BulkTranscriptStudio() {
       setSelectedLearnerId(generatedSession.records[0].learnerId);
     }
   }, [generatedSession, selectedLearnerId]);
+
+  useEffect(() => {
+    if (generatedSession || importedGroups.length === 0) {
+      return;
+    }
+
+    if (!importedGroups.some((group) => group.learnerId === selectedLearnerId)) {
+      setSelectedLearnerId(importedGroups[0].learnerId);
+    }
+  }, [generatedSession, importedGroups, selectedLearnerId]);
 
   function updateSetting<Key extends keyof BulkGlobalSettings>(
     key: Key,
@@ -268,7 +287,7 @@ export function BulkTranscriptStudio() {
       });
 
       resetGeneratedOutput(
-        `Imported ${parsed.rows.length} learner-course rows. Select a template and generate transcripts.`,
+        `Imported ${parsed.rows.length} learner credential rows. Select a template and generate transcripts.`,
       );
     } catch (error) {
       setErrorMessage(
@@ -529,11 +548,20 @@ export function BulkTranscriptStudio() {
     <main className={styles.shell}>
       <button
         type="button"
-        className={styles.sidebarToggle}
-        onClick={() => setIsSidebarOpen(true)}
+        className={`${styles.sidebarToggle} ${isSidebarOpen ? styles.sidebarToggleActive : ""}`}
+        onClick={() => setIsSidebarOpen((current) => !current)}
+        aria-label={isSidebarOpen ? "Hide controls" : "Show controls"}
+        aria-expanded={isSidebarOpen}
         data-no-print
       >
-        Open Controls
+        <span
+          className={`${styles.sidebarToggleIcon} ${isSidebarOpen ? styles.sidebarToggleIconClose : ""}`}
+          aria-hidden="true"
+        >
+          <span />
+          <span />
+          <span />
+        </span>
       </button>
 
       <div
@@ -548,20 +576,13 @@ export function BulkTranscriptStudio() {
       >
         <div className={styles.panelTopBar}>
           <StudioSwitcher />
-          <button
-            type="button"
-            className={styles.panelClose}
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            Close
-          </button>
         </div>
 
         <div className={styles.section}>
           <span className={styles.eyebrow}>Bulk CLR and Transcript Studio</span>
           <h1 className={styles.title}>Spreadsheet to CLR JSON and bulk transcripts</h1>
           <p className={styles.lede}>
-            Upload a CSV or Excel workbook with one row per learner-course entry.
+            Upload a CSV or Excel workbook with one row per learner credential or achievement entry.
             Select a transcript template, then generate the full batch before
             previewing or downloading outputs.
           </p>
@@ -570,7 +591,7 @@ export function BulkTranscriptStudio() {
         <div className={styles.section}>
           <span className={styles.sectionTitle}>Template Files</span>
           <p className={styles.hint}>
-            The import format is flat: repeat learner details on every course
+            The import format is flat: repeat learner details on every credential
             row. Download the sample CSV or Excel workbook to see the exact
             columns and a 50-learner dataset.
           </p>
@@ -712,6 +733,9 @@ export function BulkTranscriptStudio() {
 
         <div className={styles.section}>
           <span className={styles.sectionTitle}>Transcript Templates</span>
+          <p className={styles.hint}>
+            Template selection is also available in the main workspace for faster switching while reviewing learners.
+          </p>
           <div className={styles.templateGrid}>
             {transcriptTemplateOptions.map((option) => (
               <button
@@ -762,6 +786,89 @@ export function BulkTranscriptStudio() {
       </aside>
 
       <section className={styles.workspace}>
+        <section className={styles.workflowGrid} data-no-print>
+          <article className={styles.workflowCard}>
+            <div className={styles.workflowHeader}>
+              <div>
+                <p className={styles.toolbarLabel}>Step 1</p>
+                <h2 className={styles.panelTitle}>Upload or Load Bulk Data</h2>
+              </div>
+              <p className={styles.panelMeta}>
+                Start with the sample file or upload your own CSV/Excel sheet.
+              </p>
+            </div>
+
+            <div className={styles.actions}>
+              <button
+                type="button"
+                className={styles.primaryAction}
+                onClick={handleDownloadExcelTemplate}
+              >
+                Download Excel Template
+              </button>
+              <button
+                type="button"
+                className={styles.secondaryAction}
+                onClick={handleDownloadCsvTemplate}
+              >
+                Download CSV Sample
+              </button>
+            </div>
+
+            <div className={styles.actions}>
+              <label className={styles.uploadAction}>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls,.csv"
+                  className={styles.hiddenInput}
+                  onChange={(event) => void handleWorkbookUpload(event)}
+                />
+                Upload CSV or Excel
+              </label>
+              <button
+                type="button"
+                className={styles.ghostAction}
+                onClick={handleLoadSampleData}
+              >
+                Reload Sample Data
+              </button>
+            </div>
+
+            <div className={styles.workflowMeta}>
+              <strong>{sourceLabel}</strong>
+              <span>
+                {importedGroups.length} learners | {sourceRows.length} credential rows
+              </span>
+            </div>
+          </article>
+
+          <article className={styles.workflowCard}>
+            <div className={styles.workflowHeader}>
+              <div>
+                <p className={styles.toolbarLabel}>Step 2</p>
+                <h2 className={styles.panelTitle}>Select Transcript Design</h2>
+              </div>
+              <p className={styles.panelMeta}>
+                Pick the template first. The right panel updates immediately, and batch output updates after regeneration.
+              </p>
+            </div>
+
+            <div className={styles.templateDockGrid}>
+              {transcriptTemplateOptions.map((option) => (
+                <button
+                  key={`workflow-${option.id}`}
+                  type="button"
+                  className={`${styles.templateDockCard} ${settings.template === option.id ? styles.templateDockCardActive : ""}`}
+                  onClick={() => updateSetting("template", option.id)}
+                >
+                  <strong>{option.name}</strong>
+                  <span>{option.description}</span>
+                </button>
+              ))}
+            </div>
+          </article>
+        </section>
+
         <div className={styles.toolbar} data-no-print>
           <div>
             <p className={styles.toolbarLabel}>Generation Status</p>
@@ -828,9 +935,9 @@ export function BulkTranscriptStudio() {
             <p>{sourceLabel}</p>
           </article>
           <article className={styles.summaryCard}>
-            <span className={styles.summaryLabel}>Course Rows</span>
+            <span className={styles.summaryLabel}>Credential Rows</span>
             <strong>{sourceRows.length}</strong>
-            <p>Flat import rows repeated per learner-course entry.</p>
+            <p>Flat import rows repeated per learner credential entry.</p>
           </article>
           <article className={styles.summaryCard}>
             <span className={styles.summaryLabel}>Generated Batch</span>
@@ -860,10 +967,13 @@ export function BulkTranscriptStudio() {
           <section className={styles.listPanel} data-no-print>
             <div className={styles.panelHeader}>
               <div>
-                <h2 className={styles.panelTitle}>Generated Learners</h2>
+                <h2 className={styles.panelTitle}>
+                  {hasGeneratedOutput ? "Generated Learners" : "Imported Learners"}
+                </h2>
                 <p className={styles.panelMeta}>
-                  Generate the batch first, then select a learner to preview the
-                  transcript and download files.
+                  {hasGeneratedOutput
+                    ? "Select a learner to preview the generated transcript and download files."
+                    : "Select a learner to inspect the draft transcript design before generation."}
                 </p>
               </div>
             </div>
@@ -882,7 +992,7 @@ export function BulkTranscriptStudio() {
                     >
                       <strong>{record.learnerName}</strong>
                       <span>{record.studentNumber}</span>
-                      <span>{record.courseCount} courses</span>
+                      <span>{record.courseCount} credential entries</span>
                     </button>
                     <div className={styles.inlineActions}>
                       <button
@@ -912,6 +1022,40 @@ export function BulkTranscriptStudio() {
                   </article>
                 ))}
               </div>
+            ) : importedGroups.length > 0 ? (
+              <div className={styles.learnerList}>
+                {importedGroups.map((group) => {
+                  const primary = group.rows[0];
+                  const isActive =
+                    (draftSelectedGroup?.learnerId ?? "") === group.learnerId;
+
+                  return (
+                    <article
+                      key={group.learnerId}
+                      className={`${styles.learnerCard} ${isActive ? styles.learnerActive : ""}`}
+                    >
+                      <button
+                        type="button"
+                        className={styles.learnerSelect}
+                        onClick={() => setSelectedLearnerId(group.learnerId)}
+                      >
+                        <strong>{primary.fullName}</strong>
+                        <span>{primary.studentNumber}</span>
+                        <span>{group.rows.length} credential entries</span>
+                      </button>
+                      <div className={styles.inlineActions}>
+                        <button
+                          type="button"
+                          className={styles.inlineAction}
+                          onClick={() => setSelectedLearnerId(group.learnerId)}
+                        >
+                          Preview Design
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
             ) : (
               <div className={styles.listEmptyState}>
                 <p className={styles.emptyTitle}>No generated transcripts yet</p>
@@ -940,14 +1084,17 @@ export function BulkTranscriptStudio() {
           </section>
 
           <section className={styles.previewPanel}>
-            {selectedRecord && generatedSession ? (
+            {activePreviewRecord ? (
               <>
                 <div className={styles.previewHeader} data-no-print>
                   <div>
-                    <h2 className={styles.panelTitle}>{selectedRecord.learnerName}</h2>
+                    <h2 className={styles.panelTitle}>{activePreviewRecord.learnerName}</h2>
                     <p className={styles.panelMeta}>
-                      {selectedRecord.studentNumber} | {selectedRecord.courseCount}{" "}
-                      course rows | {selectedRecord.email || "No learner email"}
+                      {activePreviewRecord.studentNumber} | {activePreviewRecord.courseCount}{" "}
+                      credential entries |{" "}
+                      {hasGeneratedOutput
+                        ? "Generated transcript"
+                        : `${templateName(settings.template)} draft preview`}
                     </p>
                   </div>
                   <div className={styles.previewActions}>
@@ -972,10 +1119,10 @@ export function BulkTranscriptStudio() {
 
                 <div className={styles.previewCanvas}>
                   <TranscriptPreview
-                    record={selectedRecord.transcript}
-                    customization={generatedCustomization}
+                    record={activePreviewRecord.transcript}
+                    customization={activePreviewCustomization}
                     previewRef={previewRef}
-                    template={generatedSession.settings.template}
+                    template={generatedSession?.settings.template ?? settings.template}
                   />
                 </div>
               </>

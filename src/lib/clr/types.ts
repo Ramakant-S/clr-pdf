@@ -1,4 +1,11 @@
 export type SourceMode = "url" | "json" | "demo";
+export const transcriptEntryTypes = [
+  "coursework",
+  "internship",
+  "live project",
+  "assessment",
+] as const;
+export type TranscriptEntryType = (typeof transcriptEntryTypes)[number];
 export type TranscriptTemplate =
   | "heritage"
   | "scholar"
@@ -22,6 +29,7 @@ export interface TranscriptCourse {
   id: string;
   title: string;
   code: string;
+  credentialType: TranscriptEntryType;
   issuer: string;
   term: string;
   summary: string;

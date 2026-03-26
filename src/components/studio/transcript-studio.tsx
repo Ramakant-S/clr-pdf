@@ -99,7 +99,7 @@ export function TranscriptStudio() {
           <p className={styles.lede}>
             Load a 1EdTech CLR URL, paste CLR JSON, or start from the bundled
             demo. The app normalizes each credential achievement into a
-            professional course listing with print and PDF output.
+            professional credential listing with print and PDF output.
           </p>
         </div>
 
@@ -157,12 +157,12 @@ export function TranscriptStudio() {
               />
               <p className={styles.hint}>
                 Paste the raw CLR payload here. Embedded Open Badge credentials
-                will be transformed into course rows.
+                will be transformed into credential rows.
               </p>
             </div>
           ) : (
             <div className={`${styles.status} ${styles.statusInfo}`}>
-              Demo mode is loaded with a multi-course learner record so the
+              Demo mode is loaded with a multi-credential learner record so the
               report-card layout is visible immediately.
             </div>
           )}
@@ -474,7 +474,7 @@ export function TranscriptStudio() {
           <div>
             <h2 className={styles.previewTitle}>Transcript Preview</h2>
             <p className={styles.previewMeta}>
-              {transcript.summary.totalCourses} course records |{" "}
+              {transcript.summary.totalCourses} credential records |{" "}
               {transcript.summary.topSkills.length} tracked skills | issued{" "}
               {transcript.issuedOn}
             </p>

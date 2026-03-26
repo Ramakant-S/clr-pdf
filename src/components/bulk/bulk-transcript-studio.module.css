@@ -3,8 +3,8 @@
   display: grid;
   grid-template-columns: minmax(360px, 430px) minmax(0, 1fr);
   min-height: 100vh;
-  gap: 20px;
-  padding: 20px;
+  gap: 16px;
+  padding: 16px;
 }
 
 .sidebarToggle,
@@ -17,16 +17,65 @@
   left: 16px;
   top: 16px;
   z-index: 30;
-  min-height: 38px;
-  padding: 0 14px;
+  display: none;
+  width: 38px;
+  height: 38px;
+  padding: 0;
   border-radius: 999px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.88);
   color: var(--accent-strong);
-  font-size: 0.875rem;
-  font-weight: 700;
   box-shadow: 0 10px 24px rgba(18, 34, 47, 0.12);
   cursor: pointer;
+}
+
+.sidebarToggleActive {
+  background: var(--accent-strong);
+  color: #f7f3ea;
+}
+
+.sidebarToggleIcon {
+  position: relative;
+  display: block;
+  width: 16px;
+  height: 12px;
+  margin: 0 auto;
+}
+
+.sidebarToggleIcon span {
+  position: absolute;
+  left: 0;
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transition: transform 180ms ease, opacity 180ms ease, top 180ms ease;
+}
+
+.sidebarToggleIcon span:nth-child(1) {
+  top: 0;
+}
+
+.sidebarToggleIcon span:nth-child(2) {
+  top: 5px;
+}
+
+.sidebarToggleIcon span:nth-child(3) {
+  top: 10px;
+}
+
+.sidebarToggleIconClose span:nth-child(1) {
+  top: 5px;
+  transform: rotate(45deg);
+}
+
+.sidebarToggleIconClose span:nth-child(2) {
+  opacity: 0;
+}
+
+.sidebarToggleIconClose span:nth-child(3) {
+  top: 5px;
+  transform: rotate(-45deg);
 }
 
 .sidebarBackdrop {
@@ -38,12 +87,17 @@
   top: 28px;
   align-self: start;
   display: grid;
-  gap: 16px;
+  gap: 14px;
+  height: calc(100vh - 56px);
   max-height: calc(100vh - 56px);
-  padding: 18px;
-  overflow: auto;
+  min-height: 0;
+  padding: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   border: 1px solid var(--line);
-  border-radius: 28px;
+  border-radius: 24px;
   background: rgba(251, 248, 241, 0.88);
   backdrop-filter: blur(18px);
   box-shadow: var(--shadow);
@@ -52,31 +106,113 @@
 .panelTopBar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 12px;
 }
 
 .workspace {
   display: grid;
-  gap: 12px;
+  gap: 10px;
   min-width: 0;
+}
+
+.workflowGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.45fr);
+  gap: 12px;
+}
+
+.workflowCard {
+  display: grid;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 18px 38px rgba(18, 34, 47, 0.06);
+}
+
+.workflowHeader,
+.templateDockHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.workflowMeta {
+  display: grid;
+  gap: 2px;
+}
+
+.workflowMeta strong {
+  color: var(--accent-strong);
+  font-size: 0.875rem;
+}
+
+.workflowMeta span {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.templateDockGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.templateDockCard {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.78);
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+
+.templateDockCard:hover {
+  transform: translateY(-1px);
+}
+
+.templateDockCard strong {
+  color: var(--accent-strong);
+  font-size: 0.875rem;
+}
+
+.templateDockCard span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.templateDockCardActive {
+  border-color: rgba(139, 69, 24, 0.28);
+  background: linear-gradient(135deg, rgba(184, 100, 43, 0.16), rgba(255, 255, 255, 0.92));
+  box-shadow: 0 12px 24px rgba(139, 69, 24, 0.1);
 }
 
 .toolbar {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 14px;
-  padding: 14px 16px;
+  gap: 12px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
-  border-radius: 26px;
+  border-radius: 22px;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 18px 38px rgba(18, 34, 47, 0.08);
 }
 
 .toolbarLabel,
 .summaryLabel {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -91,8 +227,8 @@
 }
 
 .toolbarTitle {
-  margin-top: 6px;
-  font-size: 1.125rem;
+  margin-top: 4px;
+  font-size: 1.0625rem;
 }
 
 .toolbarMeta,
@@ -103,7 +239,7 @@
 .warningItem,
 .summaryCard p {
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
 }
 
@@ -111,63 +247,65 @@
 .previewActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   justify-content: flex-end;
 }
 
 .summaryGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .summaryCard {
-  padding: 14px;
+  padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 22px;
+  border-radius: 18px;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 18px 38px rgba(18, 34, 47, 0.08);
 }
 
 .summaryCard strong {
   display: block;
-  margin-top: 8px;
+  margin-top: 6px;
   font-family: var(--font-serif), serif;
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
   color: var(--accent-strong);
 }
 
 .summaryCard p {
-  margin-top: 8px;
+  margin-top: 6px;
 }
 
 .noticePanel {
-  padding: 12px 14px;
-  border-radius: 18px;
+  padding: 10px 12px;
+  border-radius: 16px;
   background: rgba(176, 104, 33, 0.1);
   color: var(--warning);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1.45;
 }
 
 .contentGrid {
   display: grid;
-  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr);
-  gap: 14px;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 12px;
   align-items: start;
 }
 
 .listPanel,
 .previewPanel {
   display: grid;
-  gap: 12px;
+  gap: 10px;
 }
 
 .listPanel {
-  padding: 14px;
+  position: sticky;
+  top: 12px;
+  padding: 12px;
   border: 1px solid var(--line);
-  border-radius: 24px;
+  border-radius: 20px;
   background: rgba(251, 248, 241, 0.82);
   box-shadow: var(--shadow);
 }
@@ -180,28 +318,28 @@
 .previewCanvas {
   min-width: 0;
   overflow: auto;
-  padding-bottom: 8px;
+  padding-bottom: 6px;
 }
 
 .section {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .eyebrow {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
 }
 
 .title {
-  font-size: 1.25rem;
-  line-height: 1.1;
+  font-size: 1.375rem;
+  line-height: 1.05;
 }
 
 .sectionTitle {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -211,12 +349,12 @@
 .fieldGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
 }
 
 .field {
   display: grid;
-  gap: 6px;
+  gap: 4px;
 }
 
 .field label {
@@ -229,10 +367,10 @@
 .textarea {
   width: 100%;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 14px;
   background: rgba(255, 255, 255, 0.78);
-  padding: 10px 12px;
-  font-size: 0.875rem;
+  padding: 8px 10px;
+  font-size: 0.8125rem;
   color: var(--ink);
 }
 
@@ -243,14 +381,14 @@
 }
 
 .textarea {
-  min-height: 84px;
+  min-height: 72px;
   resize: vertical;
 }
 
 .actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
 }
 
 .primaryAction,
@@ -276,10 +414,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  padding: 0 14px;
+  min-height: 36px;
+  padding: 0 12px;
   border-radius: 999px;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -330,23 +468,24 @@
 
 .templateGrid {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .templateCard {
   display: grid;
-  gap: 4px;
-  padding: 12px 14px;
+  gap: 3px;
+  padding: 10px 12px;
   text-align: left;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.65);
   cursor: pointer;
 }
 
 .templateCard strong {
   color: var(--accent-strong);
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
 }
 
 .templateActive {
@@ -356,9 +495,9 @@
 }
 
 .status {
-  padding: 10px 12px;
-  border-radius: 16px;
-  font-size: 0.875rem;
+  padding: 8px 10px;
+  border-radius: 14px;
+  font-size: 0.8125rem;
   line-height: 1.45;
 }
 
@@ -377,16 +516,16 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
 }
 
 .panelTitle {
-  font-size: 1.125rem;
+  font-size: 1.0625rem;
 }
 
 .learnerList {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   max-height: calc(100vh - 340px);
   overflow: auto;
   padding-right: 4px;
@@ -394,10 +533,10 @@
 
 .learnerCard {
   display: grid;
-  gap: 8px;
-  padding: 12px;
+  gap: 6px;
+  padding: 10px;
   border: 1px solid var(--line);
-  border-radius: 18px;
+  border-radius: 16px;
   background: rgba(255, 255, 255, 0.65);
 }
 
@@ -414,29 +553,29 @@
 }
 
 .learnerSelect strong {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   color: var(--ink);
 }
 
 .learnerSelect span {
   color: var(--muted);
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
 }
 
 .inlineActions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 4px;
 }
 
 .inlineAction {
-  min-height: 30px;
-  padding: 0 10px;
+  min-height: 28px;
+  padding: 0 9px;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.74);
   color: var(--accent-strong);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;
 }
@@ -446,8 +585,8 @@
 .emptyState {
   display: grid;
   gap: 6px;
-  padding: 14px;
-  border-radius: 18px;
+  padding: 12px;
+  border-radius: 16px;
 }
 
 .warningPanel {
@@ -457,14 +596,14 @@
 
 .warningTitle,
 .emptyTitle {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 700;
 }
 
 .warningPanel,
 .listEmptyState,
 .emptyState {
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   line-height: 1.45;
 }
 
@@ -487,15 +626,16 @@
   pointer-events: none;
 }
 
-@media (max-width: 1480px) {
+@media (max-width: 1200px) {
   .shell {
     grid-template-columns: 1fr;
     padding-top: 70px;
   }
 
-  .sidebarToggle,
-  .panelClose {
+  .sidebarToggle {
     display: inline-flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .sidebarBackdrop {
@@ -520,6 +660,7 @@
     bottom: 16px;
     z-index: 24;
     width: min(430px, calc(100vw - 32px));
+    height: auto;
     max-height: none;
     transform: translateX(calc(-100% - 24px));
     transition: transform 220ms ease;
@@ -528,9 +669,24 @@
   .panelOpen {
     transform: translateX(0);
   }
+}
+
+@media (max-width: 1240px) {
+  .workflowGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .templateDockGrid,
+  .templateGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
   .contentGrid {
     grid-template-columns: 1fr;
+  }
+
+  .listPanel {
+    position: static;
   }
 }
 
@@ -541,6 +697,13 @@
     grid-template-columns: 1fr;
   }
 
+  .templateDockGrid,
+  .templateGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .workflowHeader,
+  .templateDockHeader,
   .toolbar,
   .previewHeader {
     flex-direction: column;
@@ -558,8 +721,9 @@
   }
 
   .toolbar,
-  .listPanel {
-    padding: 14px;
-    border-radius: 22px;
+  .listPanel,
+  .workflowCard {
+    padding: 12px;
+    border-radius: 18px;
   }
 }
