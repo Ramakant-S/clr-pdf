@@ -18,7 +18,7 @@ import {
   type BulkGlobalSettings,
 } from "@/lib/bulk/import";
 import { downloadBlob } from "@/lib/files/download";
-import { getTranscriptPdfBlob, downloadTranscriptPdf } from "@/lib/transcript/pdf";
+import { getTranscriptPdfBlob } from "@/lib/transcript/pdf";
 import { transcriptTemplateOptions } from "@/lib/transcript/templates";
 import styles from "./bulk-transcript-studio.module.css";
 
@@ -471,7 +471,7 @@ export function BulkTranscriptStudio() {
   }
 
   async function handleDownloadSelectedPdf() {
-    if (!previewRef.current || !selectedRecord || !canDownloadOutputs) {
+    if (!generatedSession || !selectedRecord || !canDownloadOutputs) {
       return;
     }
 
@@ -485,10 +485,11 @@ export function BulkTranscriptStudio() {
       });
       setBusyMessage(`Rendering transcript for ${selectedRecord.learnerName}...`);
       await waitForUiFrame();
-      await downloadTranscriptPdf(
-        previewRef.current,
-        makeTranscriptFilename(selectedRecord),
+      const pdfBlob = await renderPdfForRecord(
+        selectedRecord,
+        generatedSession.settings,
       );
+      downloadBlob(pdfBlob, makeTranscriptFilename(selectedRecord));
       setBusyMessage(`Downloaded transcript for ${selectedRecord.learnerName}.`);
     } catch (error) {
       setErrorMessage(
@@ -496,6 +497,7 @@ export function BulkTranscriptStudio() {
       );
       setBusyMessage("");
     } finally {
+      setBatchPreviewState(null);
       setExportProgress(idleExportProgress);
     }
   }

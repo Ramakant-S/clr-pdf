@@ -723,7 +723,7 @@
 
 .batchStage {
   position: fixed;
-  left: -20000px;
+  left: -1400px;
   top: 0;
   width: 1123px;
   pointer-events: none;

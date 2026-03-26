@@ -27,6 +27,46 @@
   box-shadow: none;
 }
 
+.document[data-exporting="true"] .skillList {
+  display: block;
+}
+
+.document[data-exporting="true"] .codeChip,
+.document[data-exporting="true"] .typeBadge,
+.document[data-exporting="true"] .statusPill,
+.document[data-exporting="true"] .skillTag {
+  display: inline-block;
+  min-height: 0;
+  vertical-align: top;
+}
+
+.document[data-exporting="true"] .codeChip,
+.document[data-exporting="true"] .typeBadge,
+.document[data-exporting="true"] .statusPill {
+  padding-top: 4px;
+  padding-bottom: 4px;
+  line-height: 1.2;
+}
+
+.document[data-exporting="true"] .skillTag {
+  margin: 0 4px 4px 0;
+  padding: 4px 8px;
+  text-align: left;
+}
+
+.document[data-exporting="true"] .skillTagName,
+.document[data-exporting="true"] .skillTagMeta {
+  display: block;
+}
+
+.document[data-exporting="true"] .skillTagName {
+  line-height: 1.2;
+}
+
+.document[data-exporting="true"] .skillTagMeta {
+  margin-top: 2px;
+}
+
 .templateHeritage {
   --template-paper: #fbf8f1;
   --template-surface: rgba(255, 255, 255, 0.9);
