@@ -12,7 +12,11 @@ export type TranscriptTemplate =
   | "modern"
   | "executive"
   | "ledger"
-  | "minimal";
+  | "minimal"
+  | "atelier"
+  | "spectrum"
+  | "clarity"
+  | "monograph";
 
 export interface NormalizeClrRequest {
   mode: SourceMode;

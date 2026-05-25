@@ -963,6 +963,23 @@ interface SampleLearnerProfile {
   guardianPhonePrefix: string;
 }
 
+interface SampleCourse {
+  code: string;
+  title: string;
+  credentialType: string;
+  term: string;
+  department: string;
+  skills: string;
+  summary: string;
+  credits?: string;
+}
+
+interface SampleAchievementSet {
+  programName: string;
+  learnerProfileSummary: string;
+  courseCodes: string[];
+}
+
 const sampleLearnerCount = 10;
 
 export function createSampleBulkRows(learnerCount = sampleLearnerCount) {
@@ -1108,13 +1125,7 @@ export function createSampleBulkRows(learnerCount = sampleLearnerCount) {
       guardianPhonePrefix: "+31-6-555-",
     },
   ];
-  const programs = [
-    "Senior Secondary Diploma",
-    "STEM Excellence Track",
-    "Commerce and Analytics",
-    "Humanities and Policy",
-  ];
-  const courseCatalog = [
+  const sampleCourses: SampleCourse[] = [
     {
       code: "ENG401",
       title: "Advanced English Composition",
@@ -1123,6 +1134,24 @@ export function createSampleBulkRows(learnerCount = sampleLearnerCount) {
       department: "Languages",
       skills: "Analytical Writing | Discussion Leadership | Research Synthesis",
       summary: "Advanced reading, academic writing, and seminar-led communication.",
+    },
+    {
+      code: "MKT410",
+      title: "Brand Strategy and Campaign Planning",
+      credentialType: "coursework",
+      term: "Semester 1",
+      department: "Marketing",
+      skills: "Audience Research | Campaign Planning | Brand Messaging",
+      summary: "Market positioning, segmentation, and integrated campaign development.",
+    },
+    {
+      code: "POL409",
+      title: "Comparative Public Policy",
+      credentialType: "coursework",
+      term: "Semester 1",
+      department: "Humanities",
+      skills: "Policy Analysis | Civic Reasoning | Comparative Research",
+      summary: "Policy case studies examining governance, regulation, and public systems.",
     },
     {
       code: "MAT402",
@@ -1143,6 +1172,205 @@ export function createSampleBulkRows(learnerCount = sampleLearnerCount) {
       summary: "Multi-disciplinary lab work with structured experimentation and reporting.",
     },
     {
+      code: "COM411",
+      title: "Strategic Communication Studio",
+      credentialType: "assessment",
+      term: "Semester 1",
+      department: "Communications",
+      skills: "Presentation | Narrative Framing | Stakeholder Communication",
+      summary: "Briefing memos, presentation design, and communication strategy workshops.",
+    },
+    {
+      code: "ENV412",
+      title: "Environmental Systems and Sustainability",
+      credentialType: "coursework",
+      term: "Semester 1",
+      department: "Sciences",
+      skills: "Systems Thinking | Data Interpretation | Sustainability Planning",
+      summary: "Climate, ecosystems, and sustainability design through applied investigations.",
+    },
+    {
+      code: "SOC414",
+      title: "Contemporary Social Inquiry",
+      credentialType: "assessment",
+      term: "Semester 1",
+      department: "Humanities",
+      skills: "Evidence Evaluation | Empathy | Comparative Analysis",
+      summary: "Social issue research using interviews, survey data, and reflective analysis.",
+    },
+    {
+      code: "BIO415",
+      title: "Biotechnology and Health Research",
+      credentialType: "lab",
+      term: "Semester 1",
+      department: "Sciences",
+      skills: "Scientific Inquiry | Lab Documentation | Data Ethics",
+      summary: "Applied biotechnology concepts with wet-lab techniques and ethics review.",
+    },
+    {
+      code: "UXD416",
+      title: "User Experience Design Sprint",
+      credentialType: "live project",
+      term: "Semester 1",
+      department: "Innovation",
+      skills: "User Research | Prototyping | Visual Communication",
+      summary: "Rapid problem framing, user testing, and interface prototyping for digital tools.",
+    },
+    {
+      code: "BRD417",
+      title: "Digital Branding and Content Lab",
+      credentialType: "live project",
+      term: "Semester 1",
+      department: "Marketing",
+      skills: "Content Strategy | Visual Storytelling | Audience Engagement",
+      summary: "Brand asset development for digital channels with editorial planning.",
+    },
+    {
+      code: "CSC418",
+      title: "Full-Stack Application Development",
+      credentialType: "coursework",
+      term: "Semester 1",
+      department: "Innovation",
+      skills: "Programming | Systems Design | Debugging",
+      summary: "Client-server architecture, deployment workflows, and iterative testing.",
+    },
+    {
+      code: "CHE419",
+      title: "Applied Chemistry and Materials",
+      credentialType: "lab",
+      term: "Semester 1",
+      department: "Sciences",
+      skills: "Scientific Inquiry | Measurement Accuracy | Technical Reporting",
+      summary: "Laboratory analysis of materials, reactions, and experimental design controls.",
+    },
+    {
+      code: "HIS420",
+      title: "Global History and Historical Interpretation",
+      credentialType: "coursework",
+      term: "Semester 1",
+      department: "Humanities",
+      skills: "Historical Reasoning | Source Critique | Academic Writing",
+      summary: "Global historical case studies with source analysis and argumentative writing.",
+    },
+    {
+      code: "DAT421",
+      title: "Data Analytics and Visualization",
+      credentialType: "coursework",
+      term: "Semester 1",
+      department: "Mathematics",
+      skills: "Data Interpretation | Quantitative Reasoning | Visual Communication",
+      summary: "Data cleaning, dashboard design, and insight presentation for decision-making.",
+    },
+    {
+      code: "DES423",
+      title: "Product Design and Fabrication Studio",
+      credentialType: "studio",
+      term: "Semester 1",
+      department: "Design",
+      skills: "Design Thinking | Prototyping | Collaboration",
+      summary: "Concept development and fabrication workflows for physical product ideas.",
+    },
+    {
+      code: "MED424",
+      title: "Media Literacy and Civic Journalism",
+      credentialType: "assessment",
+      term: "Semester 2",
+      department: "Communications",
+      skills: "Media Analysis | Fact Checking | Ethical Reporting",
+      summary: "Verification practices, audience trust, and civic reporting in digital media.",
+    },
+    {
+      code: "SEC425",
+      title: "Cybersecurity Foundations",
+      credentialType: "coursework",
+      term: "Semester 2",
+      department: "Innovation",
+      skills: "Security Awareness | Risk Analysis | Incident Response",
+      summary: "Secure systems practice, threat modeling, and basic incident response planning.",
+    },
+    {
+      code: "BUS426",
+      title: "Business Operations and Team Leadership",
+      credentialType: "coursework",
+      term: "Semester 2",
+      department: "Commerce",
+      skills: "Operations Planning | Leadership | Collaboration",
+      summary: "Organizational systems, workflow design, and team decision-making practice.",
+    },
+    {
+      code: "LAW427",
+      title: "Law, Rights, and Institutions",
+      credentialType: "coursework",
+      term: "Semester 2",
+      department: "Humanities",
+      skills: "Argumentation | Civic Reasoning | Policy Interpretation",
+      summary: "Case-based study of legal systems, rights discourse, and institutional process.",
+    },
+    {
+      code: "FIN428",
+      title: "Financial Literacy and Investment Analysis",
+      credentialType: "assessment",
+      term: "Semester 2",
+      department: "Commerce",
+      skills: "Financial Analysis | Quantitative Reasoning | Scenario Planning",
+      summary: "Budgeting, portfolio basics, and financial decision-making using case evidence.",
+    },
+    {
+      code: "ROB430",
+      title: "Robotics Systems Challenge",
+      credentialType: "live project",
+      term: "Semester 2",
+      department: "Innovation",
+      skills: "Systems Integration | Debugging | Problem Solving",
+      summary: "Sensor integration, automation workflows, and iterative robotics testing.",
+    },
+    {
+      code: "RES431",
+      title: "Independent Research Seminar",
+      credentialType: "seminar",
+      term: "Semester 2",
+      department: "Academic Studies",
+      skills: "Research Synthesis | Academic Writing | Project Management",
+      summary: "Guided independent inquiry culminating in a formal research brief and viva.",
+    },
+    {
+      code: "AIM432",
+      title: "Artificial Intelligence and Applied Models",
+      credentialType: "coursework",
+      term: "Semester 2",
+      department: "Innovation",
+      skills: "Model Evaluation | Data Ethics | Systems Thinking",
+      summary: "Machine learning concepts, model critique, and responsible AI application.",
+    },
+    {
+      code: "PSY433",
+      title: "Behavioural Psychology and Decision Science",
+      credentialType: "coursework",
+      term: "Semester 2",
+      department: "Humanities",
+      skills: "Research Analysis | Behavioural Insight | Evidence Evaluation",
+      summary: "Decision-making frameworks, behavioural experiments, and applied reflection.",
+    },
+    {
+      code: "ENT434",
+      title: "Entrepreneurship Venture Lab",
+      credentialType: "live project",
+      term: "Semester 2",
+      department: "Commerce",
+      skills: "Opportunity Assessment | Pitching | Financial Planning",
+      summary: "Lean venture validation, customer discovery, and investor-style pitch practice.",
+    },
+    {
+      code: "CAP435",
+      title: "Community Leadership Capstone",
+      credentialType: "capstone",
+      term: "Semester 2",
+      department: "Student Leadership",
+      skills: "Leadership | Service Learning | Reflective Practice",
+      summary: "Community action project with portfolio evidence and reflective presentation.",
+      credits: "0.5",
+    },
+    {
       code: "CSC404",
       title: "Computer Science Live Project",
       credentialType: "live project",
@@ -1159,6 +1387,72 @@ export function createSampleBulkRows(learnerCount = sampleLearnerCount) {
       department: "Humanities",
       skills: "Policy Analysis | Data Interpretation | Presentation",
       summary: "Economic reasoning and civic policy review through case studies.",
+      credits: "0.5",
+    },
+  ];
+  const sampleCourseMap = new Map(
+    sampleCourses.map((course) => [course.code, course] as const),
+  );
+  const sampleAchievementSets: SampleAchievementSet[] = [
+    {
+      programName: "Senior Secondary Diploma",
+      learnerProfileSummary:
+        "Balanced academic profile with strengths in writing, quantitative reasoning, and interdisciplinary project work.",
+      courseCodes: ["ENG401", "MAT402", "SCI403", "CSC404", "DAT421", "RES431", "ECO405"],
+    },
+    {
+      programName: "Software Engineering and AI Pathway",
+      learnerProfileSummary:
+        "Technology-focused learner with emphasis on software, cybersecurity, and applied AI systems.",
+      courseCodes: ["MAT402", "CSC418", "SEC425", "DAT421", "AIM432", "ROB430", "UXD416", "CAP435"],
+    },
+    {
+      programName: "Marketing and Brand Strategy",
+      learnerProfileSummary:
+        "Creative commercial pathway combining campaign planning, content strategy, and presentation-led execution.",
+      courseCodes: ["ENG401", "MKT410", "COM411", "BRD417", "BUS426", "FIN428", "ENT434", "CAP435"],
+    },
+    {
+      programName: "Engineering Design Track",
+      learnerProfileSummary:
+        "STEM-focused learner profile combining modelling, fabrication, robotics, and solution design.",
+      courseCodes: ["MAT402", "SCI403", "CHE419", "DES423", "CSC404", "ROB430", "DAT421", "CAP435"],
+    },
+    {
+      programName: "Humanities and Public Policy",
+      learnerProfileSummary:
+        "Humanities pathway centered on public systems, law, history, and persuasive academic communication.",
+      courseCodes: ["ENG401", "POL409", "HIS420", "LAW427", "MED424", "SOC414", "PSY433", "ECO405"],
+    },
+    {
+      programName: "Commerce and Analytics",
+      learnerProfileSummary:
+        "Commercial decision-making pathway with strong grounding in analytics, finance, and entrepreneurship.",
+      courseCodes: ["MAT402", "DAT421", "MKT410", "BUS426", "FIN428", "ENT434", "COM411", "ECO405"],
+    },
+    {
+      programName: "Health and Life Sciences",
+      learnerProfileSummary:
+        "Science-forward record blending laboratory practice, sustainability, and evidence-based research skills.",
+      courseCodes: ["SCI403", "BIO415", "CHE419", "ENV412", "MAT402", "RES431", "PSY433", "CAP435"],
+    },
+    {
+      programName: "Media, Design, and Civic Impact",
+      learnerProfileSummary:
+        "Communication-oriented pathway focused on storytelling, journalism, design, and community leadership.",
+      courseCodes: ["ENG401", "COM411", "MED424", "UXD416", "BRD417", "SOC414", "CAP435"],
+    },
+    {
+      programName: "Liberal Arts and Business",
+      learnerProfileSummary:
+        "Mixed pathway integrating humanities inquiry with practical business communication and market analysis.",
+      courseCodes: ["ENG401", "HIS420", "PSY433", "COM411", "MKT410", "FIN428", "BUS426", "RES431"],
+    },
+    {
+      programName: "Innovation, Policy, and Enterprise",
+      learnerProfileSummary:
+        "Cross-disciplinary profile combining AI, entrepreneurship, civic policy, and independent research.",
+      courseCodes: ["AIM432", "DAT421", "ENT434", "POL409", "LAW427", "CSC418", "RES431", "ECO405"],
     },
   ];
   const proficiencyScaleLabels = defaultBulkProficiencyLegend.map(
@@ -1189,15 +1483,30 @@ export function createSampleBulkRows(learnerCount = sampleLearnerCount) {
     const learnerId = `learner-${String(learnerIndex + 1).padStart(3, "0")}`;
     const studentNumber = `CLR-${2026}${String(learnerIndex + 1).padStart(4, "0")}`;
     const homeroom = `${11 + (learnerIndex % 2)}-${String.fromCharCode(65 + (learnerIndex % 4))}`;
-    const programName = programs[learnerIndex % programs.length];
+    const achievementSet =
+      sampleAchievementSets[learnerIndex % sampleAchievementSets.length];
+    const learnerCourses = achievementSet.courseCodes.map((courseCode) => {
+      const course = sampleCourseMap.get(courseCode);
+
+      if (!course) {
+        throw new Error(`Missing sample course definition for ${courseCode}.`);
+      }
+
+      return course;
+    });
+    const programName = achievementSet.programName;
     const gradeLevel = learnerIndex % 2 === 0 ? "Grade 11" : "Grade 12";
     const verificationUrl = `https://bulk.demo.example/clr/${slugify(studentNumber)}`;
     const recordId = makeRecordId(studentNumber);
 
-    for (let courseIndex = 0; courseIndex < courseCatalog.length; courseIndex += 1) {
-      const course = courseCatalog[(learnerIndex + courseIndex) % courseCatalog.length];
+    for (let courseIndex = 0; courseIndex < learnerCourses.length; courseIndex += 1) {
+      const course = learnerCourses[courseIndex];
       const grade = 74 + ((learnerIndex * 3 + courseIndex * 5) % 24);
-      const credits = courseIndex === courseCatalog.length - 1 ? "0.5" : "1";
+      const credits =
+        course.credits ??
+        (course.credentialType === "internship" || course.credentialType === "capstone"
+          ? "0.5"
+          : "1");
       const skillNames = splitSkills(course.skills);
       const skillCodes = skillNames.map(
         (skill, skillIndex) =>
@@ -1230,7 +1539,7 @@ export function createSampleBulkRows(learnerCount = sampleLearnerCount) {
         section: `Section ${String.fromCharCode(65 + (learnerIndex % 4))}`,
         academicYear: "2025-2026",
         reportingPeriod: "Annual Result",
-        learnerProfileSummary: "",
+        learnerProfileSummary: achievementSet.learnerProfileSummary,
         addressLine: `${15 + learnerIndex} ${profile.addressSuffix}`,
         city: profile.city,
         state: profile.state,

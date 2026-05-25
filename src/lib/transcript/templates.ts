@@ -37,4 +37,24 @@ export const transcriptTemplateOptions: TranscriptTemplateOption[] = [
     name: "Minimal",
     description: "A restrained high-whitespace layout built from lines, spacing, and air.",
   },
+  {
+    id: "atelier",
+    name: "Atelier",
+    description: "An editorial studio treatment with warm paper, sculpted cards, and gallery polish.",
+  },
+  {
+    id: "spectrum",
+    name: "Spectrum",
+    description: "A high-contrast systems design with vivid coded chips and a sharp digital finish.",
+  },
+  {
+    id: "clarity",
+    name: "Clarity",
+    description: "A crisp institutional layout with disciplined spacing, soft blue structure, and calm precision.",
+  },
+  {
+    id: "monograph",
+    name: "Monograph",
+    description: "A monochrome academic transcript with disciplined chips, formal typography, and archival restraint.",
+  },
 ];
