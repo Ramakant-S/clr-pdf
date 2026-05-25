@@ -15,9 +15,10 @@ export function TranscriptPrintClient() {
   const [payload] = useState<TranscriptPdfPayload | null>(() =>
     typeof window === "undefined" ? null : (window.__TRANSCRIPT_PDF_PAYLOAD__ ?? null),
   );
+  const [layoutSettled, setLayoutSettled] = useState(false);
 
   useEffect(() => {
-    if (!payload) {
+    if (!payload || !layoutSettled) {
       return;
     }
 
@@ -46,7 +47,7 @@ export function TranscriptPrintClient() {
       cancelled = true;
       delete document.body.dataset.pdfReady;
     };
-  }, [payload]);
+  }, [payload, layoutSettled]);
 
   if (!payload) {
     return null;
@@ -58,6 +59,7 @@ export function TranscriptPrintClient() {
       customization={payload.customization}
       previewRef={previewRef}
       template={payload.template}
+      onLayoutSettledChange={setLayoutSettled}
     />
   );
 }
