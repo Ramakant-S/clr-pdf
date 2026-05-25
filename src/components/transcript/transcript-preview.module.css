@@ -468,7 +468,7 @@
 
 .table th:nth-child(4),
 .table td:nth-child(4) {
-  width: 68px;
+  width: 92px;
 }
 
 .table th:nth-child(5),
@@ -492,21 +492,37 @@
   line-height: 1.1;
 }
 
-.codeChip {
+.courseChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.codeChip,
+.evidenceChip {
   display: inline-flex;
   align-items: center;
   min-height: 20px;
-  margin-top: 5px;
   padding: 0 8px;
   border-radius: var(--template-chip-radius);
   border: 1px solid rgba(19, 33, 45, 0.08);
-  background: var(--template-accent-soft);
-  color: var(--template-accent-strong);
   font-family: var(--template-font-accent), sans-serif;
   font-size: 0.52rem;
   font-weight: 700;
   line-height: 1;
   white-space: nowrap;
+}
+
+.codeChip {
+  background: var(--template-accent-soft);
+  color: var(--template-accent-strong);
+}
+
+.evidenceChip {
+  border-color: rgba(47, 107, 85, 0.16);
+  background: var(--template-success-bg);
+  color: var(--template-success-fg);
 }
 
 .summaryText {

@@ -1,5 +1,6 @@
 import { load } from "cheerio";
 import { NextResponse } from "next/server";
+import { defaultInstitutionBranding } from "@/lib/branding/defaults";
 import {
   getDemoClrPayload,
   normalizeClrDocument,
@@ -151,7 +152,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         normalizeClrDocument(getDemoClrPayload(), {
           mode: "demo",
-          sourceUrl: "https://credentials.riverstone.example/clr/2026/semester-final",
+          sourceUrl: defaultInstitutionBranding.verificationUrl,
         }),
       );
     }

@@ -73,6 +73,12 @@ const baseAbbreviations: TranscriptLegendItem[] = [
   },
 ];
 
+const defaultLearnerProgram = "B.E. in Computer Science";
+const defaultLearnerGradeLevel = "Undergraduate Year 2";
+const defaultLearnerHomeroom = "CS-2A";
+const defaultCredentialCredits = 1;
+const defaultProficiencyLevels = ["Beginning", "Developing", "Proficient", "Advanced"] as const;
+
 function isRecord(value: unknown): value is JsonRecord {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -166,6 +172,23 @@ function makeFallbackStudentId(seed: string): string {
   return `STU-${numeric}`;
 }
 
+function makeSeededIndex(seed: string, modulo: number): number {
+  let hash = 2_166_136_261;
+
+  for (const character of seed) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16_777_619) >>> 0;
+  }
+
+  return hash % modulo;
+}
+
+function makeDefaultProficiencyLevel(seed: string): string {
+  return defaultProficiencyLevels[
+    makeSeededIndex(seed, defaultProficiencyLevels.length)
+  ];
+}
+
 function initialsFromName(name: string): string {
   return name
     .split(/\s+/)
@@ -253,6 +276,60 @@ function extractIdentifier(source: unknown): string | undefined {
     source.id,
     source.name,
   );
+}
+
+function extractIdentityValue(source: unknown, acceptedTypes: RegExp[]): string | undefined {
+  if (Array.isArray(source)) {
+    for (const entry of source) {
+      const resolved = extractIdentityValue(entry, acceptedTypes);
+      if (resolved) {
+        return resolved;
+      }
+    }
+
+    return undefined;
+  }
+
+  if (!isRecord(source)) {
+    return undefined;
+  }
+
+  const identityType = pickString(source.identityType, source.identifierType);
+  if (!identityType || !acceptedTypes.some((pattern) => pattern.test(identityType))) {
+    return undefined;
+  }
+
+  return pickString(source.identityHash, source.identifier, source.value, source.name);
+}
+
+function extractLearnerName(
+  subject: JsonRecord | undefined,
+  payload: JsonRecord,
+  embeddedCredentials: JsonRecord[],
+): string | undefined {
+  const embeddedSubjects = embeddedCredentials
+    .map((credential) => credential.credentialSubject)
+    .filter(isRecord);
+
+  return pickString(
+    subject?.name,
+    subject?.givenName,
+    getValue(subject, "identity.name"),
+    extractIdentityValue(subject?.identifier, [/^name$/i, /student.?name/i, /learner.?name/i]),
+    extractIdentityValue(payload.identifier, [/^name$/i, /student.?name/i, /learner.?name/i]),
+    ...embeddedSubjects.map((embeddedSubject) =>
+      extractIdentityValue(embeddedSubject.identifier, [/^name$/i, /student.?name/i, /learner.?name/i]),
+    ),
+  );
+}
+
+function deriveProgramName(title: string): string {
+  const beforeColon = title.split(":")[0]?.trim();
+  if (beforeColon && !/transcript|record|credential/i.test(beforeColon)) {
+    return beforeColon;
+  }
+
+  return defaultLearnerProgram;
 }
 
 function extractNames(source: unknown): string[] {
@@ -598,6 +675,10 @@ function normalizeCourse(
     credential.validUntil,
     credential.validFrom,
   );
+  const hasEvidence =
+    asArray(subject?.evidence).length > 0 ||
+    asArray(credential.evidence).length > 0 ||
+    asArray(achievement?.evidence).length > 0;
 
   const summary =
     pickString(
@@ -621,11 +702,12 @@ function normalizeCourse(
     summary,
   );
 
-  const creditsValue =
+  const extractedCreditsValue =
     parseNumber(getValue(achievement, "creditsAvailable.value")) ??
     parseNumber(achievement?.creditsAvailable) ??
     parseNumber(getValue(subject, "creditsEarned.value")) ??
     parseNumber(subject?.creditsEarned);
+  const creditsValue = extractedCreditsValue ?? defaultCredentialCredits;
   const alignments = extractAlignments(achievement?.alignment);
   const rawSkillNames = uniqueStrings([
     ...alignments.map((alignment) => alignment.name),
@@ -657,11 +739,19 @@ function normalizeCourse(
     };
   });
 
+  const courseId = pickString(credential.id, achievement?.id) ?? `${courseCode}-${index + 1}`;
+  const courseTitle =
+    pickString(achievement?.name, subject?.name, credential.name) ??
+    `Achievement ${index + 1}`;
+  const proficiencyLabel =
+    resultDescriptors.find((descriptor) => descriptor.achievedLevelLabel)
+      ?.achievedLevelLabel ??
+    skillDetails.find((skill) => skill.proficiencyLevel)?.proficiencyLevel ??
+    makeDefaultProficiencyLevel(`${courseId}-${courseTitle}-${courseCode}`);
+
   return {
-    id: pickString(credential.id, achievement?.id) ?? `${courseCode}-${index + 1}`,
-    title:
-      pickString(achievement?.name, subject?.name, credential.name) ??
-      `Achievement ${index + 1}`,
+    id: courseId,
+    title: courseTitle,
     code: courseCode,
     credentialType,
     issuer: issuer.name,
@@ -678,10 +768,12 @@ function normalizeCourse(
     alignments,
     gradeLabel: gradeEntry?.value ?? "Recorded",
     gradeValue: gradeEntry?.numeric,
+    proficiencyLabel,
     creditsLabel:
-      creditsValue != null ? `${creditsValue.toFixed(creditsValue % 1 === 0 ? 0 : 1)} credit` : "Recorded",
+      `${creditsValue.toFixed(creditsValue % 1 === 0 ? 0 : 1)} credit`,
     creditsValue,
     status: statusEntry?.value ?? "Completed",
+    hasEvidence,
     startDate: startDateSource,
     endDate: endDateSource,
     resultDescriptors,
@@ -776,8 +868,9 @@ export function normalizeClrDocument(
     0,
   );
 
+  const title = pickString(payload.name, payload.title) ?? "Official Academic Transcript";
   const learnerName =
-    pickString(subject?.name, subject?.givenName, getValue(subject, "identity.name")) ?? "Learner";
+    extractLearnerName(subject, payload, embeddedCredentials) ?? "Learner";
 
   const learner: TranscriptLearner = {
     fullName: learnerName,
@@ -790,14 +883,17 @@ export function normalizeClrDocument(
       makeFallbackStudentId(
         pickString(subject?.id, payload.id, learnerName) ?? "learner",
       ),
-    gradeLevel: pickString(subject?.gradeLevel, subject?.academicLevel),
-    programName: pickString(subject?.programName, getValue(subject, "program.name")),
-    homeroom: pickString(subject?.homeroom),
+    gradeLevel:
+      pickString(subject?.gradeLevel, subject?.academicLevel) ??
+      defaultLearnerGradeLevel,
+    programName:
+      pickString(subject?.programName, getValue(subject, "program.name")) ??
+      deriveProgramName(title),
+    homeroom: pickString(subject?.homeroom) ?? defaultLearnerHomeroom,
     oen: pickString(subject?.oen, subject?.nationalId),
     profileSummary: buildProfileSummary(learnerName, topSkills),
   };
 
-  const title = pickString(payload.name, payload.title) ?? "Official Academic Transcript";
   const issuedOn =
     formatDate(
       pickString(payload.validFrom, payload.issuanceDate, payload.awardedDate, courses.at(-1)?.endDate),
@@ -821,7 +917,7 @@ export function normalizeClrDocument(
     sourceType: options.mode,
     sourceUrl: options.sourceUrl,
     verificationUrl:
-      options.sourceUrl ?? pickString(payload.id, payload.identifier, getValue(payload, "credentialSubject.id")),
+      pickString(payload.id, payload.identifier, options.sourceUrl, getValue(payload, "credentialSubject.id")),
     credentialId: pickString(payload.identifier, payload.id) ?? "Credential ID unavailable",
     title,
     issuedOn,

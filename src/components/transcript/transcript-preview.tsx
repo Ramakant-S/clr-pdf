@@ -2,7 +2,10 @@
 
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
-import { defaultInstitutionBranding, isIbuBranding } from "@/lib/branding/defaults";
+import {
+  defaultInstitutionBranding,
+  isDefaultInstitutionBranding,
+} from "@/lib/branding/defaults";
 import { formatTranscriptEntryType } from "@/lib/clr/entry-type";
 import { paginateCourses } from "@/lib/transcript/paginate";
 import type {
@@ -80,7 +83,12 @@ function renderCourseRows(
           <span className={styles.courseTitle}>{course.title}</span>
         </div>
         <p className={styles.summaryText}>{course.summary}</p>
-        <span className={styles.codeChip}>{course.code}</span>
+        <div className={styles.courseChips}>
+          <span className={styles.codeChip}>{course.code}</span>
+          {course.hasEvidence ? (
+            <span className={styles.evidenceChip}>Evidence Included</span>
+          ) : null}
+        </div>
       </td>
       <td>
         {usePlainMeta ? (
@@ -123,7 +131,7 @@ function renderCourseRows(
         )}
       </td>
       <td className={styles.gradeCell}>
-        <span className={styles.gradeValue}>{course.gradeLabel}</span>
+        <span className={styles.gradeValue}>{course.proficiencyLabel}</span>
       </td>
       <td className={styles.metricCell}>{course.creditsLabel}</td>
       <td>
@@ -186,7 +194,10 @@ export function TranscriptPreview({
     customization.institutionAddress || record.institution.address,
     institutionWebsite,
   ].filter((value): value is string => Boolean(value && value.trim()));
-  const useIbuLogo = isIbuBranding(institutionName, institutionWebsite);
+  const useInstitutionLogo = isDefaultInstitutionBranding(
+    institutionName,
+    institutionWebsite,
+  );
   const footerText =
     customization.footerText.trim() ||
     `${institutionName} | Official academic record prepared from CLR data`;
@@ -201,10 +212,10 @@ export function TranscriptPreview({
       <section className={styles.sheet} data-transcript-page>
         <header className={styles.sheetHeader}>
           <div className={styles.brandBlock}>
-            {useIbuLogo ? (
+            {useInstitutionLogo ? (
               <Image
                 src={defaultInstitutionBranding.logoPath}
-                alt="International Business University logo"
+                alt="Goa Tech Institute logo"
                 className={styles.brandLogo}
                 width={148}
                 height={44}
@@ -214,7 +225,7 @@ export function TranscriptPreview({
               <div className={styles.seal}>{sealText}</div>
             )}
             <div>
-              {!useIbuLogo ? (
+              {!useInstitutionLogo ? (
                 <p className={styles.institutionName}>{institutionName}</p>
               ) : null}
               {institutionLines.length > 0 ? (
@@ -333,7 +344,7 @@ export function TranscriptPreview({
               <p className={styles.tableTitle}>Credential and Achievement Listing</p>
               <p className={styles.tableHint}>
                 Each CLR achievement is presented as a credential entry with type,
-                summary, skills, grade, credits, and recorded result.
+                summary, skills, proficiency, credits, and recorded result.
               </p>
             </div>
             <span className={styles.label}>Transcript Page 1</span>
@@ -345,7 +356,7 @@ export function TranscriptPreview({
                 <th>Credential / Achievement</th>
                 <th>Type</th>
                 <th>Skills Earned</th>
-                <th>Grade</th>
+                <th>Proficiency</th>
                 <th>Credits</th>
                 <th>Result</th>
               </tr>
@@ -412,7 +423,7 @@ export function TranscriptPreview({
                   <th>Credential / Achievement</th>
                   <th>Type</th>
                   <th>Skills Earned</th>
-                  <th>Grade</th>
+                  <th>Proficiency</th>
                   <th>Credits</th>
                   <th>Result</th>
                 </tr>
@@ -444,20 +455,6 @@ export function TranscriptPreview({
 
         <div className={styles.legendColumns}>
           <div className={styles.legendColumn}>
-            <section className={styles.compactPanel}>
-              <p className={styles.panelTitle}>Grade Interpretation</p>
-              <table className={styles.legendTable}>
-                <tbody>
-                  {record.gradeLegend.map((entry) => (
-                    <tr key={entry.label}>
-                      <td className={styles.legendCode}>{entry.label}</td>
-                      <td className={styles.legendCopy}>{entry.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </section>
-
             <section className={styles.compactPanel}>
               <p className={styles.panelTitle}>Abbreviations</p>
               <table className={styles.legendTable}>

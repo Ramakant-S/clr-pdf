@@ -6,44 +6,44 @@ export const demoClrPayload = {
     "https://purl.imsglobal.org/spec/clr/v2p0/context-2.0.1.json",
     "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
   ],
-  id: "https://ibu.ca/demo/clr/2026/semester-final",
+  id: defaultInstitutionBranding.verificationUrl,
   type: ["VerifiableCredential", "ClrCredential"],
   name: "Higher Secondary Comprehensive Learner Record",
   issuer: {
-    id: "https://ibu.ca/demo/issuers/registrar",
+    id: "https://goatech.example/demo/issuers/registrar",
     type: ["Profile"],
     name: defaultInstitutionBranding.name,
     url: defaultInstitutionBranding.website,
     address: {
-      streetAddress: "655 Bay St., Suite 200",
-      addressLocality: "Toronto",
-      addressRegion: "ON",
-      postalCode: "M5G 2K4",
-      addressCountry: "Canada",
+      streetAddress: "Plot 42, Kadamba Plateau",
+      addressLocality: "Panaji",
+      addressRegion: "Goa",
+      postalCode: "403006",
+      addressCountry: "India",
     },
   },
   validFrom: "2026-03-18T09:00:00Z",
   credentialSubject: {
-    id: "did:example:student-amara-nelson",
+    id: "did:example:student-shivona-fernandes",
     type: ["Learner"],
-    name: "Amara Nelson",
-    studentId: "IBU-2026-1042",
+    name: "Shivona Fernandes",
+    studentId: "GTI-2026-1042",
     gradeLevel: "Year 4",
     homeroom: "",
     programName: "Bachelor of Commerce (Honours)",
     verifiableCredential: [
       {
-        id: "https://ibu.ca/demo/course/english-12",
+        id: "https://goatech.example/demo/course/english-12",
         type: ["VerifiableCredential", "OpenBadgeCredential", "AchievementCredential"],
         issuer: {
-          id: "https://ibu.ca/demo/issuers/english",
+          id: "https://goatech.example/demo/issuers/english",
           name: defaultInstitutionBranding.name,
         },
         validFrom: "2025-12-12T09:00:00Z",
         credentialSubject: {
-          id: "did:example:student-amara-nelson",
+          id: "did:example:student-shivona-fernandes",
           achievement: {
-            id: "https://ibu.ca/demo/achievements/eng4u",
+            id: "https://goatech.example/demo/achievements/eng4u",
             type: ["Achievement"],
             achievementType: "coursework",
             name: "English Literature and Composition",
@@ -65,17 +65,17 @@ export const demoClrPayload = {
         },
       },
       {
-        id: "https://ibu.ca/demo/course/calculus-advanced",
+        id: "https://goatech.example/demo/course/calculus-advanced",
         type: ["VerifiableCredential", "OpenBadgeCredential", "AchievementCredential"],
         issuer: {
-          id: "https://ibu.ca/demo/issuers/stem",
+          id: "https://goatech.example/demo/issuers/stem",
           name: defaultInstitutionBranding.name,
         },
         validFrom: "2025-12-12T09:00:00Z",
         credentialSubject: {
-          id: "did:example:student-amara-nelson",
+          id: "did:example:student-shivona-fernandes",
           achievement: {
-            id: "https://ibu.ca/demo/achievements/mcv4u",
+            id: "https://goatech.example/demo/achievements/mcv4u",
             type: ["Achievement"],
             achievementType: "coursework",
             name: "Calculus and Vectors",
@@ -97,17 +97,17 @@ export const demoClrPayload = {
         },
       },
       {
-        id: "https://ibu.ca/demo/course/biology-systems",
+        id: "https://goatech.example/demo/course/biology-systems",
         type: ["VerifiableCredential", "OpenBadgeCredential", "AchievementCredential"],
         issuer: {
-          id: "https://ibu.ca/demo/issuers/science",
+          id: "https://goatech.example/demo/issuers/science",
           name: defaultInstitutionBranding.name,
         },
         validFrom: "2026-03-16T09:00:00Z",
         credentialSubject: {
-          id: "did:example:student-amara-nelson",
+          id: "did:example:student-shivona-fernandes",
           achievement: {
-            id: "https://ibu.ca/demo/achievements/sbi4u",
+            id: "https://goatech.example/demo/achievements/sbi4u",
             type: ["Achievement"],
             achievementType: "assessment",
             name: "Biology: Systems and Genetics",
@@ -129,17 +129,17 @@ export const demoClrPayload = {
         },
       },
       {
-        id: "https://ibu.ca/demo/course/economics-policy",
+        id: "https://goatech.example/demo/course/economics-policy",
         type: ["VerifiableCredential", "OpenBadgeCredential", "AchievementCredential"],
         issuer: {
-          id: "https://ibu.ca/demo/issuers/humanities",
+          id: "https://goatech.example/demo/issuers/humanities",
           name: defaultInstitutionBranding.name,
         },
         validFrom: "2026-03-16T09:00:00Z",
         credentialSubject: {
-          id: "did:example:student-amara-nelson",
+          id: "did:example:student-shivona-fernandes",
           achievement: {
-            id: "https://ibu.ca/demo/achievements/cia4u",
+            id: "https://goatech.example/demo/achievements/cia4u",
             type: ["Achievement"],
             achievementType: "coursework",
             name: "Economics and Public Policy",
@@ -161,17 +161,17 @@ export const demoClrPayload = {
         },
       },
       {
-        id: "https://ibu.ca/demo/course/computer-science",
+        id: "https://goatech.example/demo/course/computer-science",
         type: ["VerifiableCredential", "OpenBadgeCredential", "AchievementCredential"],
         issuer: {
-          id: "https://ibu.ca/demo/issuers/innovation",
+          id: "https://goatech.example/demo/issuers/innovation",
           name: defaultInstitutionBranding.name,
         },
         validFrom: "2026-03-16T09:00:00Z",
         credentialSubject: {
-          id: "did:example:student-amara-nelson",
+          id: "did:example:student-shivona-fernandes",
           achievement: {
-            id: "https://ibu.ca/demo/achievements/ics4u",
+            id: "https://goatech.example/demo/achievements/ics4u",
             type: ["Achievement"],
             achievementType: "live project",
             name: "Computer Science and Application Design",
@@ -193,17 +193,17 @@ export const demoClrPayload = {
         },
       },
       {
-        id: "https://ibu.ca/demo/course/capstone-leadership",
+        id: "https://goatech.example/demo/course/capstone-leadership",
         type: ["VerifiableCredential", "OpenBadgeCredential", "AchievementCredential"],
         issuer: {
-          id: "https://ibu.ca/demo/issuers/career",
+          id: "https://goatech.example/demo/issuers/career",
           name: defaultInstitutionBranding.name,
         },
         validFrom: "2026-03-18T09:00:00Z",
         credentialSubject: {
-          id: "did:example:student-amara-nelson",
+          id: "did:example:student-shivona-fernandes",
           achievement: {
-            id: "https://ibu.ca/demo/achievements/capstone",
+            id: "https://goatech.example/demo/achievements/capstone",
             type: ["Achievement"],
             achievementType: "internship",
             name: "Leadership Capstone and Career Readiness",

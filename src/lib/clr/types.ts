@@ -81,9 +81,11 @@ export interface TranscriptCourse {
   alignments: TranscriptAlignment[];
   gradeLabel: string;
   gradeValue?: number;
+  proficiencyLabel: string;
   creditsLabel: string;
   creditsValue?: number;
   status: string;
+  hasEvidence: boolean;
   startDate?: string;
   endDate?: string;
   resultDescriptors: TranscriptResultDescriptor[];

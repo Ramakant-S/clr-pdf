@@ -1,5 +1,8 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
-import { defaultTranscriptCustomization } from "@/lib/branding/defaults";
+import {
+  defaultInstitutionBranding,
+  defaultTranscriptCustomization,
+} from "@/lib/branding/defaults";
 import {
   getDemoClrPayload,
   normalizeClrDocument,
@@ -15,7 +18,7 @@ type TranscriptTextField = Exclude<keyof TranscriptCustomization, "template">;
 
 const demoTranscript = normalizeClrDocument(getDemoClrPayload(), {
   mode: "demo",
-  sourceUrl: "https://ibu.ca/demo/clr/2026/semester-final",
+  sourceUrl: defaultInstitutionBranding.verificationUrl,
 });
 
 const defaultCustomization: TranscriptCustomization = {

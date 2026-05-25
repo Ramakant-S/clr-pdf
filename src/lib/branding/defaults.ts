@@ -1,16 +1,18 @@
 import type { TranscriptCustomization } from "@/lib/clr/types";
 
 export const defaultInstitutionBranding = {
-  name: "International Business University",
-  boardName: "Toronto Campus",
-  address: "655 Bay St., Suite 200, Toronto M5G 2K4, Canada",
-  website: "https://ibu.ca",
+  name: "Goa Tech Institute",
+  boardName: "Academic Records Office",
+  address: "Plot 42, Kadamba Plateau, Panaji, Goa 403006, India",
+  website: "https://goatech.example",
+  verificationUrl:
+    "https://testapp.thesolo.network/clr-credentials/89ce185b-677e-5992-ba18-59a23e48296c",
   registrarName: "Office of the Registrar",
   principalName: "Academic Dean",
-  sealText: "IBU",
+  sealText: "GT",
   footerText:
-    "Prepared for official academic review and print distribution by International Business University.",
-  logoPath: "/ibu-logo.svg",
+    "Prepared for official academic review and print distribution by Goa Tech Institute.",
+  logoPath: "/institution-logo.svg",
 } as const;
 
 export const defaultTranscriptCustomization: TranscriptCustomization = {
@@ -31,9 +33,9 @@ export const defaultTranscriptCustomization: TranscriptCustomization = {
   template: "heritage",
 };
 
-export function isIbuBranding(name?: string, website?: string) {
+export function isDefaultInstitutionBranding(name?: string, website?: string) {
   return Boolean(
-    name?.toLowerCase().includes("international business university") ||
-      website?.toLowerCase().includes("ibu.ca"),
+    name?.toLowerCase().includes(defaultInstitutionBranding.name.toLowerCase()) ||
+      website?.toLowerCase().includes("goatech.example"),
   );
 }
