@@ -215,6 +215,29 @@ function formatAddress(address: unknown): string | undefined {
   ]).join(", ");
 }
 
+function extractImageUrl(source: unknown): string | undefined {
+  if (typeof source === "string") {
+    return source;
+  }
+
+  if (Array.isArray(source)) {
+    for (const entry of source) {
+      const resolved = extractImageUrl(entry);
+      if (resolved) {
+        return resolved;
+      }
+    }
+
+    return undefined;
+  }
+
+  if (!isRecord(source)) {
+    return undefined;
+  }
+
+  return pickString(source.id, source.url, source.href);
+}
+
 function deriveTerm(value: unknown): string | undefined {
   const explicit = pickString(value);
   if (explicit) {
@@ -420,6 +443,7 @@ function normalizeIssuer(source: unknown): TranscriptInstitution | undefined {
     address: formatAddress(source.address),
     website: pickString(source.url, source.email),
     logoText: initialsFromName(name),
+    logoUrl: extractImageUrl(source.image),
   };
 }
 
@@ -826,6 +850,7 @@ export function normalizeClrDocument(
       address: defaultInstitutionBranding.address,
       website: defaultInstitutionBranding.website,
       logoText: defaultInstitutionBranding.sealText,
+      logoUrl: defaultInstitutionBranding.logoPath,
     };
 
   const coursePayloads =

@@ -101,6 +101,7 @@ export interface TranscriptInstitution {
   address?: string;
   website?: string;
   logoText: string;
+  logoUrl?: string;
 }
 
 export interface TranscriptLearner {

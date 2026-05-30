@@ -258,11 +258,14 @@ export function TranscriptPreview({
     institutionWebsite,
   );
   const uploadedLogoDataUrl = customization.logoDataUrl.trim();
-  const logoSrc = uploadedLogoDataUrl || (useInstitutionLogo ? defaultInstitutionBranding.logoPath : "");
+  const issuerLogoUrl = record.institution.logoUrl?.trim() ?? "";
+  const logoSrc =
+    uploadedLogoDataUrl ||
+    issuerLogoUrl ||
+    (useInstitutionLogo ? defaultInstitutionBranding.logoPath : "");
   const hasBrandLogo = Boolean(logoSrc);
-  const logoAlt = uploadedLogoDataUrl
-    ? `${institutionName} logo`
-    : "Goa Tech Institute logo";
+  const usesDynamicLogo = Boolean(uploadedLogoDataUrl || issuerLogoUrl);
+  const logoAlt = `${institutionName} logo`;
   const footerText =
     customization.footerText.trim() ||
     `${institutionName} | Official academic record prepared from CLR data`;
@@ -519,7 +522,7 @@ export function TranscriptPreview({
                 className={styles.brandLogo}
                 width={148}
                 height={44}
-                unoptimized={Boolean(uploadedLogoDataUrl)}
+                unoptimized={usesDynamicLogo}
                 priority
               />
             ) : (
@@ -770,7 +773,7 @@ export function TranscriptPreview({
                       className={styles.brandLogo}
                       width={148}
                       height={44}
-                      unoptimized={Boolean(uploadedLogoDataUrl)}
+                      unoptimized={usesDynamicLogo}
                     />
                   ) : (
                     <div className={styles.seal}>{sealText}</div>
