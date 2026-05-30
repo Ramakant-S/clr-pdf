@@ -18,7 +18,6 @@ import {
   createSampleBulkWorkbook,
   defaultBulkGlobalSettings,
   groupBulkImportRows,
-  parseBulkWorkbook,
   type BulkGeneratedLearnerRecord,
   type BulkGlobalSettings,
 } from "@/lib/bulk/import";
@@ -33,6 +32,9 @@ const csvMimeType = "text/csv;charset=utf-8;";
 const workbookMimeType =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const sampleLearnerCount = 10;
+const bulkDemoOnly = true;
+const premiumPlanMessage =
+  "Bulk import and batch export are part of the premium SOLO infrastructure for skills transcripts. This workspace is a view-only demo using sample data.";
 
 type GenerationStatus = "idle" | "running" | "completed" | "stopped";
 
@@ -216,6 +218,7 @@ export function BulkTranscriptStudio() {
       generatedSession.settingsRevision !== settingsRevision);
   const isExporting = exportProgress.task !== "idle";
   const canDownloadOutputs =
+    !bulkDemoOnly &&
     hasGeneratedOutput &&
     !outputIsStale &&
     generationStatus !== "running" &&
@@ -227,9 +230,13 @@ export function BulkTranscriptStudio() {
         ? "Generated Transcripts Ready"
         : generationStatus === "stopped"
           ? "Generation Stopped"
-          : "Setup Your Batch";
+          : bulkDemoOnly
+            ? "View-Only Demo"
+            : "Setup Your Batch";
   const statusDescription =
-    generationStatus === "running"
+    bulkDemoOnly
+      ? premiumPlanMessage
+      : generationStatus === "running"
       ? `Currently preparing ${generationProgress.currentLearner || "learner records"}.`
       : outputIsStale && generatedSession
         ? `Template or global settings changed after generation. Preview still shows the last generated ${templateName(generatedSession.settings.template)} batch until you regenerate.`
@@ -363,41 +370,6 @@ export function BulkTranscriptStudio() {
     });
   }
 
-  async function handleWorkbookUpload(
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
-
-    setErrorMessage("");
-    setBusyMessage(`Parsing ${file.name}...`);
-
-    try {
-      const buffer = await file.arrayBuffer();
-      const parsed = parseBulkWorkbook(buffer);
-
-      startTransition(() => {
-        setSourceRows(parsed.rows);
-        setWarnings(parsed.warnings);
-        setSourceLabel(`${file.name} (${parsed.sheetName})`);
-        setSourceRevision((current) => current + 1);
-      });
-
-      resetGeneratedOutput(
-        `Imported ${parsed.rows.length} learner credential rows. Select a template and generate transcripts.`,
-      );
-    } catch (error) {
-      setErrorMessage(
-        error instanceof Error ? error.message : "The workbook could not be read.",
-      );
-      setBusyMessage("");
-    } finally {
-      event.target.value = "";
-    }
-  }
-
   function handleLoadSampleData() {
     const sampleRows = createSampleBulkRows(sampleLearnerCount);
     startTransition(() => {
@@ -408,11 +380,16 @@ export function BulkTranscriptStudio() {
     });
     setErrorMessage("");
     resetGeneratedOutput(
-      `Loaded ${sampleLearnerCount} sample learners. Choose a template and click Generate All Transcripts.`,
+      `Loaded ${sampleLearnerCount} sample learners for the view-only demo preview.`,
     );
   }
 
   function handleDownloadCsvTemplate() {
+    if (bulkDemoOnly) {
+      setErrorMessage(premiumPlanMessage);
+      return;
+    }
+
     downloadBlob(
       new Blob([createSampleBulkCsv(sampleLearnerCount)], { type: csvMimeType }),
       "bulk-clr-import-sample.csv",
@@ -420,6 +397,11 @@ export function BulkTranscriptStudio() {
   }
 
   function handleDownloadExcelTemplate() {
+    if (bulkDemoOnly) {
+      setErrorMessage(premiumPlanMessage);
+      return;
+    }
+
     downloadBlob(
       new Blob([createSampleBulkWorkbook(sampleLearnerCount)], {
         type: workbookMimeType,
@@ -429,6 +411,11 @@ export function BulkTranscriptStudio() {
   }
 
   async function handleGenerateAll() {
+    if (bulkDemoOnly) {
+      setErrorMessage(premiumPlanMessage);
+      return;
+    }
+
     if (importedGroups.length === 0) {
       setErrorMessage("Upload a workbook or load the sample data first.");
       return;
@@ -725,7 +712,7 @@ export function BulkTranscriptStudio() {
             <span className={styles.eyebrow}>Advanced Batch Settings</span>
             <h2 className={styles.title}>Institution and transcript defaults</h2>
             <p className={styles.lede}>
-              These values apply to every learner in the batch. Upload, template selection, and generation stay in the workflow steps below.
+              These values apply to every sample learner in the demo. Upload and batch generation are premium SOLO infrastructure features.
             </p>
           </div>
 
@@ -889,7 +876,7 @@ export function BulkTranscriptStudio() {
           </div>
 
           <div className={styles.section}>
-            <span className={styles.sectionTitle}>Current Batch</span>
+            <span className={styles.sectionTitle}>Demo Batch</span>
             <p className={styles.hint}>
               {importedGroups.length} learners loaded from {sourceLabel}. Selected template:{" "}
               {templateName(settings.template)}.
@@ -903,7 +890,7 @@ export function BulkTranscriptStudio() {
           ) : (
             <div className={`${styles.status} ${styles.statusInfo}`}>
               {busyMessage ||
-                "Imported data and template edits stay in draft mode until you generate the batch."}
+                premiumPlanMessage}
             </div>
           )}
         </section>
@@ -912,11 +899,11 @@ export function BulkTranscriptStudio() {
           <div>
             <p className={styles.toolbarLabel}>Bulk CLR and Transcript Studio</p>
             <h1 className={styles.workspaceTitle}>
-              Upload data, choose a design, then generate the full transcript batch
+              Bulk import demo for SOLO skills transcripts
             </h1>
           </div>
           <p className={styles.workspaceHint}>
-            The setup stays at the top. Once the batch is generated, use the learner rail on the left and the larger transcript preview on the right to review outputs before downloading.
+            {premiumPlanMessage} Use the learner rail and template choices to preview how generated transcript batches appear.
           </p>
         </section>
 
@@ -925,10 +912,10 @@ export function BulkTranscriptStudio() {
             <div className={styles.workflowHeader}>
               <div>
                 <p className={styles.toolbarLabel}>Step 1</p>
-                <h2 className={styles.panelTitle}>Upload or Load Bulk Data</h2>
+                <h2 className={styles.panelTitle}>Sample Bulk Data</h2>
               </div>
               <p className={styles.panelMeta}>
-                Start with the sample file or upload your own CSV/Excel sheet.
+                Uploading your own CSV or Excel file is available in the premium SOLO skills transcript plan.
               </p>
             </div>
 
@@ -937,28 +924,24 @@ export function BulkTranscriptStudio() {
                 type="button"
                 className={styles.primaryAction}
                 onClick={handleDownloadExcelTemplate}
+                disabled
               >
-                Download Excel Template
+                Excel Template Locked
               </button>
               <button
                 type="button"
                 className={styles.secondaryAction}
                 onClick={handleDownloadCsvTemplate}
+                disabled
               >
-                Download CSV Sample
+                CSV Sample Locked
               </button>
             </div>
 
             <div className={styles.actions}>
-              <label className={styles.uploadAction}>
-                <input
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  className={styles.hiddenInput}
-                  onChange={(event) => void handleWorkbookUpload(event)}
-                />
-                Upload CSV or Excel
-              </label>
+              <button type="button" className={styles.uploadAction} disabled>
+                Upload CSV or Excel Locked
+              </button>
               <button
                 type="button"
                 className={styles.ghostAction}
@@ -983,7 +966,7 @@ export function BulkTranscriptStudio() {
                 <h2 className={styles.panelTitle}>Select Transcript Design</h2>
               </div>
               <p className={styles.panelMeta}>
-                Pick the template first. The right panel updates immediately, and batch output updates after regeneration.
+                Pick a template to update the sample transcript preview immediately.
               </p>
             </div>
 
@@ -1008,10 +991,10 @@ export function BulkTranscriptStudio() {
             <div className={styles.workflowHeader}>
               <div>
                 <p className={styles.toolbarLabel}>Step 3</p>
-                <h2 className={styles.panelTitle}>Generate and Review Batch</h2>
+                <h2 className={styles.panelTitle}>Review Demo Batch</h2>
               </div>
               <p className={styles.panelMeta}>
-                Generate after upload and template selection. If you adjust the design or global defaults later, regenerate to refresh preview and downloads.
+                Batch generation, exports, and custom file processing are premium SOLO infrastructure features.
               </p>
             </div>
 
@@ -1021,7 +1004,7 @@ export function BulkTranscriptStudio() {
                 <h3 className={styles.toolbarTitle}>{statusTitle}</h3>
                 <p className={styles.toolbarMeta}>{statusDescription}</p>
                 <div className={styles.workflowMeta}>
-                  <strong>{importedGroups.length} learners ready</strong>
+                  <strong>{importedGroups.length} sample learners ready</strong>
                   <span>
                     {sourceRows.length} credential rows | {warnings.length} warnings
                   </span>
@@ -1034,11 +1017,9 @@ export function BulkTranscriptStudio() {
                     type="button"
                     className={styles.primaryAction}
                     onClick={() => void handleGenerateAll()}
-                    disabled={generationStatus === "running"}
+                    disabled
                   >
-                    {hasGeneratedOutput
-                      ? "Regenerate All Transcripts"
-                      : "Generate All Transcripts"}
+                    Generate Locked
                   </button>
                   <button
                     type="button"
@@ -1046,7 +1027,7 @@ export function BulkTranscriptStudio() {
                     onClick={handleStopGeneration}
                     disabled={generationStatus !== "running"}
                   >
-                    Stop
+                    Stop Locked
                   </button>
                   <button
                     type="button"
@@ -1060,7 +1041,7 @@ export function BulkTranscriptStudio() {
                       ) : null}
                       {exportProgress.task === "all-pdfs"
                         ? "Preparing PDFs"
-                        : "Download All PDFs"}
+                        : "PDF Export Locked"}
                     </span>
                   </button>
                   <button
@@ -1075,7 +1056,7 @@ export function BulkTranscriptStudio() {
                       ) : null}
                       {exportProgress.task === "all-clr"
                         ? "Preparing JSON"
-                        : "Download All CLR JSON"}
+                        : "CLR JSON Export Locked"}
                     </span>
                   </button>
                 </div>
@@ -1117,22 +1098,22 @@ export function BulkTranscriptStudio() {
 
         {outputIsStale ? (
           <div className={styles.noticePanel} data-no-print>
-            Template or global settings changed after the last generation.
-            Regenerate the batch to apply the new design and metadata to preview
-            and downloads.
+            Template or global settings changed. The demo preview updates from
+            the current sample data; premium workspaces can regenerate and
+            export full batches.
           </div>
         ) : null}
 
         <div className={styles.resultsHeader} data-no-print>
           <div>
-            <p className={styles.toolbarLabel}>Generated Workspace</p>
+            <p className={styles.toolbarLabel}>Demo Workspace</p>
             <h2 className={styles.panelTitle}>
-              {hasGeneratedOutput ? "Generated Transcripts" : "Draft Transcript Preview"}
+              {hasGeneratedOutput ? "Generated Transcripts" : "Sample Transcript Preview"}
             </h2>
             <p className={styles.panelMeta}>
               {hasGeneratedOutput
                 ? "Use the learner rail on the left to switch between generated transcripts."
-                : "Use the learner rail on the left to inspect the selected design before generation."}
+                : "Use the learner rail on the left to inspect sample transcript designs. Upload and export are premium features."}
             </p>
           </div>
           <div className={styles.resultsMeta}>
@@ -1147,12 +1128,12 @@ export function BulkTranscriptStudio() {
             <div className={styles.panelHeader}>
               <div>
                 <h2 className={styles.panelTitle}>
-                  {hasGeneratedOutput ? "Generated Learners" : "Imported Learners"}
+                  {hasGeneratedOutput ? "Generated Learners" : "Sample Learners"}
                 </h2>
                 <p className={styles.panelMeta}>
                   {hasGeneratedOutput
-                    ? "Select a learner to preview the generated transcript and download files."
-                    : "Select a learner to inspect the draft transcript design before generation."}
+                    ? "Select a learner to preview the generated transcript."
+                    : "Select a sample learner to inspect the transcript design."}
                 </p>
               </div>
             </div>
@@ -1246,10 +1227,10 @@ export function BulkTranscriptStudio() {
               </div>
             ) : (
               <div className={styles.listEmptyState}>
-                <p className={styles.emptyTitle}>No generated transcripts yet</p>
+                <p className={styles.emptyTitle}>No sample learners loaded</p>
                 <p className={styles.panelMeta}>
-                  {importedGroups.length} learners are loaded from the current
-                  workbook. Click Generate All Transcripts to prepare the batch.
+                  Reload the sample data to view the premium bulk transcript
+                  workflow demo.
                 </p>
               </div>
             )}
@@ -1298,7 +1279,7 @@ export function BulkTranscriptStudio() {
                         ) : null}
                         {exportProgress.task === "selected-pdf"
                           ? "Preparing PDF"
-                          : "Download Transcript"}
+                          : "Transcript Download Locked"}
                       </span>
                     </button>
                     <button
@@ -1307,7 +1288,7 @@ export function BulkTranscriptStudio() {
                       onClick={handleDownloadSelectedClr}
                       disabled={!canDownloadOutputs}
                     >
-                      Download CLR JSON
+                      CLR JSON Locked
                     </button>
                   </div>
                 </div>
@@ -1323,11 +1304,11 @@ export function BulkTranscriptStudio() {
               </>
             ) : (
               <div className={styles.emptyState}>
-                <p className={styles.emptyTitle}>Preview unlocks after generation</p>
+                <p className={styles.emptyTitle}>Preview loads from sample data</p>
                 <p className={styles.panelMeta}>
-                  Upload data, choose a template, and run Generate All
-                  Transcripts. The learner list and preview will appear here when
-                  the batch is ready.
+                  Reload the sample data and choose a template to inspect the
+                  view-only demo. Custom uploads and exports are premium SOLO
+                  skills transcript features.
                 </p>
               </div>
             )}

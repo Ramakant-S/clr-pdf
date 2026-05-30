@@ -524,6 +524,7 @@
 .primaryAction:disabled,
 .secondaryAction:disabled,
 .ghostAction:disabled,
+.uploadAction:disabled,
 .inlineAction:disabled {
   opacity: 0.48;
   cursor: not-allowed;
