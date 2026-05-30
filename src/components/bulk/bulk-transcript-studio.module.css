@@ -46,7 +46,7 @@
   font-family: var(--font-montserrat), sans-serif;
   font-size: 1.25rem;
   line-height: 1.1;
-  color: var(--accent-strong);
+  color: var(--ink);
 }
 
 .workspaceHint {
@@ -90,7 +90,7 @@
 }
 
 .workflowMeta strong {
-  color: var(--accent-strong);
+  color: var(--ink);
   font-size: 0.875rem;
 }
 
@@ -126,7 +126,7 @@
 }
 
 .templateDockCard strong {
-  color: var(--accent-strong);
+  color: var(--ink);
   font-size: 0.875rem;
 }
 
@@ -137,9 +137,9 @@
 }
 
 .templateDockCardActive {
-  border-color: rgba(255, 107, 53, 0.34);
-  background: linear-gradient(135deg, rgba(255, 107, 53, 0.14), rgba(255, 255, 255, 0.95));
-  box-shadow: 0 12px 24px rgba(255, 107, 53, 0.12);
+  border-color: rgba(255, 107, 53, 0.24);
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.05), rgba(255, 255, 255, 0.97));
+  box-shadow: 0 12px 24px rgba(17, 24, 39, 0.05);
 }
 
 .generateGrid {
@@ -182,14 +182,14 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--muted);
 }
 
 .toolbarTitle,
 .panelTitle,
 .title {
   font-family: var(--font-montserrat), sans-serif;
-  color: var(--accent-strong);
+  color: var(--ink);
 }
 
 .toolbarTitle {
@@ -236,7 +236,7 @@
   margin-top: 6px;
   font-family: var(--font-montserrat), sans-serif;
   font-size: 1.0625rem;
-  color: var(--accent-strong);
+  color: var(--ink);
 }
 
 .summaryCard p {
@@ -280,7 +280,7 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.78);
-  color: var(--accent-strong);
+  color: var(--ink);
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -346,7 +346,7 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.68);
-  color: var(--accent-strong);
+  color: var(--ink);
   cursor: pointer;
   transition:
     transform 160ms ease,
@@ -390,7 +390,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--muted);
 }
 
 .fieldGrid {
@@ -427,7 +427,7 @@
 
 .input:focus,
 .textarea:focus {
-  outline: 2px solid rgba(255, 107, 53, 0.2);
+  outline: 2px solid rgba(255, 107, 53, 0.16);
   border-color: var(--accent);
 }
 
@@ -506,12 +506,12 @@
 .primaryAction {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
   color: #f7f3ea;
-  box-shadow: 0 10px 24px rgba(255, 107, 53, 0.28);
+  box-shadow: 0 10px 24px rgba(255, 107, 53, 0.18);
 }
 
 .secondaryAction {
-  background: rgba(255, 107, 53, 0.1);
-  color: var(--accent-strong);
+  background: rgba(17, 24, 39, 0.05);
+  color: var(--ink);
 }
 
 .ghostAction,
@@ -554,14 +554,14 @@
 }
 
 .templateCard strong {
-  color: var(--accent-strong);
+  color: var(--ink);
   font-size: 0.875rem;
 }
 
 .templateActive {
-  border-color: rgba(255, 107, 53, 0.34);
-  background: linear-gradient(135deg, rgba(255, 107, 53, 0.14), rgba(255, 255, 255, 0.95));
-  box-shadow: 0 14px 28px rgba(255, 107, 53, 0.14);
+  border-color: rgba(255, 107, 53, 0.24);
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.05), rgba(255, 255, 255, 0.97));
+  box-shadow: 0 14px 28px rgba(17, 24, 39, 0.06);
 }
 
 .status {
@@ -572,8 +572,8 @@
 }
 
 .statusInfo {
-  background: rgba(255, 107, 53, 0.1);
-  color: var(--accent-strong);
+  background: rgba(17, 24, 39, 0.05);
+  color: var(--ink);
 }
 
 .statusError {
@@ -585,9 +585,9 @@
   display: grid;
   gap: 6px;
   padding: 10px 12px;
-  border: 1px solid rgba(255, 107, 53, 0.2);
+  border: 1px solid rgba(17, 24, 39, 0.1);
   border-radius: 16px;
-  background: rgba(255, 107, 53, 0.08);
+  background: rgba(17, 24, 39, 0.04);
 }
 
 .exportStatusHeader {
@@ -595,7 +595,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  color: var(--accent-strong);
+  color: var(--ink);
   font-size: 0.78rem;
 }
 
@@ -612,7 +612,7 @@
 .loaderDot {
   width: 10px;
   height: 10px;
-  border: 2px solid rgba(255, 107, 53, 0.22);
+  border: 2px solid rgba(255, 107, 53, 0.16);
   border-top-color: var(--accent-strong);
   border-radius: 999px;
   animation: bulk-spin 0.8s linear infinite;
@@ -623,7 +623,7 @@
   overflow: hidden;
   height: 7px;
   border-radius: 999px;
-  background: rgba(255, 107, 53, 0.12);
+  background: rgba(17, 24, 39, 0.08);
 }
 
 .exportProgressFill {
@@ -664,8 +664,8 @@
 }
 
 .learnerActive {
-  border-color: rgba(255, 107, 53, 0.34);
-  background: linear-gradient(135deg, rgba(255, 107, 53, 0.12), rgba(255, 255, 255, 0.95));
+  border-color: rgba(255, 107, 53, 0.24);
+  background: linear-gradient(135deg, rgba(255, 107, 53, 0.05), rgba(255, 255, 255, 0.97));
 }
 
 .learnerSelect {
@@ -697,7 +697,7 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.74);
-  color: var(--accent-strong);
+  color: var(--ink);
   font-size: 0.72rem;
   font-weight: 700;
   cursor: pointer;

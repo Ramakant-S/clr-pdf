@@ -4,7 +4,7 @@
   gap: 6px;
   padding: 6px;
   border-radius: 999px;
-  background: rgba(255, 107, 53, 0.1);
+  background: rgba(17, 24, 39, 0.06);
 }
 
 .link {
@@ -14,7 +14,7 @@
   min-height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  color: var(--accent-strong);
+  color: #374151;
   font-size: 0.8125rem;
   font-weight: 700;
   transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
@@ -25,7 +25,7 @@
 }
 
 .active {
-  background: var(--accent-strong);
+  background: var(--accent);
   color: #f7f3ea;
 }
 

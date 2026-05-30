@@ -5,8 +5,8 @@
   --template-border: rgba(19, 33, 45, 0.16);
   --template-border-strong: rgba(19, 33, 45, 0.28);
   --template-accent: var(--accent);
-  --template-accent-strong: var(--accent-strong);
-  --template-accent-soft: rgba(255, 107, 53, 0.08);
+  --template-accent-strong: var(--ink);
+  --template-accent-soft: rgba(255, 107, 53, 0.04);
   --template-ink: var(--ink);
   --template-muted: var(--muted);
   --template-success-bg: rgba(47, 107, 85, 0.08);
@@ -91,8 +91,8 @@
   --template-border: rgba(33, 37, 41, 0.14);
   --template-border-strong: rgba(33, 37, 41, 0.24);
   --template-accent: #ff6b35;
-  --template-accent-strong: #ff6b00;
-  --template-accent-soft: rgba(255, 107, 53, 0.08);
+  --template-accent-strong: #111827;
+  --template-accent-soft: rgba(255, 107, 53, 0.04);
   --template-ink: #111827;
   --template-muted: #4b5563;
   --template-success-bg: rgba(47, 107, 85, 0.08);
@@ -872,7 +872,7 @@
 }
 
 .templateHeritage .tablePanel {
-  border-top: 2px solid rgba(255, 107, 53, 0.18);
+  border-top: 2px solid rgba(255, 107, 53, 0.12);
 }
 
 .templateScholar .sheet {
