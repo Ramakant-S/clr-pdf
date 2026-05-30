@@ -6,7 +6,7 @@
   --template-border-strong: rgba(19, 33, 45, 0.28);
   --template-accent: var(--accent);
   --template-accent-strong: var(--accent-strong);
-  --template-accent-soft: rgba(182, 106, 52, 0.06);
+  --template-accent-soft: rgba(255, 107, 53, 0.08);
   --template-ink: var(--ink);
   --template-muted: var(--muted);
   --template-success-bg: rgba(47, 107, 85, 0.08);
@@ -88,13 +88,13 @@
   --template-paper: #ffffff;
   --template-surface: rgba(255, 255, 255, 0.9);
   --template-surface-strong: #ffffff;
-  --template-border: rgba(31, 41, 51, 0.14);
-  --template-border-strong: rgba(31, 41, 51, 0.24);
-  --template-accent: #b66a34;
-  --template-accent-strong: #8f471c;
-  --template-accent-soft: rgba(182, 106, 52, 0.06);
-  --template-ink: #17212b;
-  --template-muted: #657383;
+  --template-border: rgba(33, 37, 41, 0.14);
+  --template-border-strong: rgba(33, 37, 41, 0.24);
+  --template-accent: #ff6b35;
+  --template-accent-strong: #ff6b00;
+  --template-accent-soft: rgba(255, 107, 53, 0.08);
+  --template-ink: #111827;
+  --template-muted: #4b5563;
   --template-success-bg: rgba(47, 107, 85, 0.08);
   --template-success-fg: #2f6b55;
   --template-sheet-radius: 10px;
@@ -872,7 +872,7 @@
 }
 
 .templateHeritage .tablePanel {
-  border-top: 2px solid rgba(182, 106, 52, 0.12);
+  border-top: 2px solid rgba(255, 107, 53, 0.18);
 }
 
 .templateScholar .sheet {
