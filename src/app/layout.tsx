@@ -1,24 +1,7 @@
 import type { Metadata } from "next";
-import {
-  IBM_Plex_Sans,
-  Montserrat,
-  Roboto,
-  Source_Serif_4,
-} from "next/font/google";
+import { Montserrat, Roboto } from "next/font/google";
 import { StoreProvider } from "@/store/provider";
 import "./globals.css";
-
-const sans = IBM_Plex_Sans({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const serif = Source_Serif_4({
-  variable: "--font-serif",
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-});
 
 const roboto = Roboto({
   variable: "--font-roboto",
@@ -46,7 +29,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${serif.variable} ${roboto.variable} ${montserrat.variable}`}
+      className={`${roboto.variable} ${montserrat.variable}`}
     >
       <body>
         <StoreProvider>{children}</StoreProvider>

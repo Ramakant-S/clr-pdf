@@ -6,7 +6,7 @@
   --template-border-strong: rgba(19, 33, 45, 0.28);
   --template-accent: var(--accent);
   --template-accent-strong: var(--accent-strong);
-  --template-accent-soft: rgba(184, 100, 43, 0.08);
+  --template-accent-soft: rgba(182, 106, 52, 0.06);
   --template-ink: var(--ink);
   --template-muted: var(--muted);
   --template-success-bg: rgba(47, 107, 85, 0.08);
@@ -15,9 +15,9 @@
   --template-card-radius: 10px;
   --template-chip-radius: 999px;
   --template-card-shadow: none;
-  --template-font-body: var(--font-sans);
-  --template-font-heading: var(--font-serif);
-  --template-font-accent: var(--font-sans);
+  --template-font-body: var(--font-roboto);
+  --template-font-heading: var(--font-montserrat);
+  --template-font-accent: var(--font-montserrat);
   display: grid;
   gap: 14px;
   padding-bottom: 18px;
@@ -85,16 +85,16 @@
 }
 
 .templateHeritage {
-  --template-paper: #fbf8f1;
+  --template-paper: #ffffff;
   --template-surface: rgba(255, 255, 255, 0.9);
   --template-surface-strong: #ffffff;
-  --template-border: rgba(86, 55, 36, 0.18);
-  --template-border-strong: rgba(86, 55, 36, 0.28);
-  --template-accent: #b8642b;
-  --template-accent-strong: #8b4518;
-  --template-accent-soft: rgba(184, 100, 43, 0.08);
-  --template-ink: #2f231c;
-  --template-muted: #7e6757;
+  --template-border: rgba(31, 41, 51, 0.14);
+  --template-border-strong: rgba(31, 41, 51, 0.24);
+  --template-accent: #b66a34;
+  --template-accent-strong: #8f471c;
+  --template-accent-soft: rgba(182, 106, 52, 0.06);
+  --template-ink: #17212b;
+  --template-muted: #657383;
   --template-success-bg: rgba(47, 107, 85, 0.08);
   --template-success-fg: #2f6b55;
   --template-sheet-radius: 10px;
@@ -268,7 +268,7 @@
   --template-chip-radius: 999px;
   --template-card-shadow: none;
   --template-font-body: var(--font-roboto);
-  --template-font-heading: var(--font-serif);
+  --template-font-heading: var(--font-montserrat);
   --template-font-accent: var(--font-montserrat);
 }
 
@@ -357,14 +357,14 @@
   border-radius: 8px;
   background: linear-gradient(145deg, var(--template-accent) 0%, var(--template-accent-strong) 100%);
   color: #f7f3ea;
-  font-family: var(--template-font-heading), serif;
+  font-family: var(--template-font-heading), sans-serif;
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .institutionName {
-  font-family: var(--template-font-heading), serif;
+  font-family: var(--template-font-heading), sans-serif;
   font-size: 0.9rem;
   line-height: 1.08;
   color: var(--template-accent-strong);
@@ -389,7 +389,7 @@
 .overflowTitle,
 .tableTitle,
 .panelTitle {
-  font-family: var(--template-font-heading), serif;
+  font-family: var(--template-font-heading), sans-serif;
   color: var(--template-accent-strong);
 }
 
@@ -512,7 +512,7 @@
 }
 
 .summaryCard strong {
-  font-family: var(--template-font-heading), serif;
+  font-family: var(--template-font-heading), sans-serif;
   font-size: 0.98rem;
   line-height: 1;
 }
@@ -872,7 +872,7 @@
 }
 
 .templateHeritage .tablePanel {
-  border-top: 2px solid rgba(184, 100, 43, 0.18);
+  border-top: 2px solid rgba(182, 106, 52, 0.12);
 }
 
 .templateScholar .sheet {
