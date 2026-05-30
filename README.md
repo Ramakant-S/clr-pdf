@@ -22,8 +22,7 @@ It then normalizes credentials into course rows, adds transcript fields such as 
 - React
 - Redux Toolkit
 - RTK Query
-- html2canvas
-- jsPDF
+- Playwright Chromium for PDF rendering
 - qrcode.react
 
 ## Run
@@ -84,7 +83,7 @@ It currently:
 - The app intentionally labels CLR credentials as courses in the transcript view.
 - Badge terminology is not shown in the report-card layout.
 - The QR code links to the source CLR URL when available.
-- PDF export is client-side and renders the visible transcript pages into an A4 landscape PDF.
+- PDF export is handled by the server route using Playwright Chromium.
 
 ## Validation
 

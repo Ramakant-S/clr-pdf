@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { QRCodeSVG } from "qrcode.react";
 import {
@@ -272,7 +272,7 @@ export function TranscriptPreview({
   const coverCourses = coursePages[0] ?? [];
   const overflowPages = coursePages.slice(1);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setCoursePages(estimatedPages);
     });
@@ -280,7 +280,7 @@ export function TranscriptPreview({
     return () => window.cancelAnimationFrame(frame);
   }, [estimatedPages]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setLayoutSettled(false);
     });
@@ -314,7 +314,7 @@ export function TranscriptPreview({
     onLayoutSettledChange,
   ]);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     if (layoutSettled) {
       onLayoutSettledChange?.(true);
       return;

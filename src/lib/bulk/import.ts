@@ -1,11 +1,6 @@
-import * as XLSX from "xlsx";
 import { defaultTranscriptCustomization } from "@/lib/branding/defaults";
-import {
-  normalizeTranscriptEntryType,
-  resolveTranscriptEntryType,
-} from "@/lib/clr/entry-type";
+import { resolveTranscriptEntryType } from "@/lib/clr/entry-type";
 import { normalizeClrDocument } from "@/lib/clr/normalize";
-import { transcriptEntryTypes } from "@/lib/clr/types";
 import type {
   TranscriptLegendItem,
   TranscriptCustomization,
@@ -92,12 +87,6 @@ export interface BulkGeneratedLearnerRecord {
   transcript: TranscriptRecord;
 }
 
-export interface BulkParseResult {
-  rows: BulkImportRow[];
-  warnings: string[];
-  sheetName: string;
-}
-
 export interface BulkLearnerGroup {
   learnerId: string;
   rows: BulkImportRow[];
@@ -114,6 +103,7 @@ const CONTEXT_URLS = [
   "https://purl.imsglobal.org/spec/clr/v2p0/context-2.0.1.json",
   "https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json",
 ] as const;
+const fallbackIssuedIsoDate = "2026-05-31T00:00:00.000Z";
 
 const defaultBulkProficiencyLegend: TranscriptLegendItem[] = [
   {
@@ -403,82 +393,6 @@ export const bulkImportColumns: BulkColumn[] = [
   },
 ];
 
-const emptyBulkImportRow: BulkImportRow = {
-  learnerId: "",
-  studentNumber: "",
-  recordId: "",
-  fullName: "",
-  givenName: "",
-  familyName: "",
-  email: "",
-  phone: "",
-  dateOfBirth: "",
-  gender: "",
-  gradeLevel: "",
-  programName: "",
-  homeroom: "",
-  section: "",
-  academicYear: "",
-  reportingPeriod: "",
-  learnerProfileSummary: "",
-  addressLine: "",
-  city: "",
-  state: "",
-  postalCode: "",
-  country: "",
-  guardianName: "",
-  guardianEmail: "",
-  guardianPhone: "",
-  verificationUrl: "",
-  credentialType: "",
-  courseCode: "",
-  courseTitle: "",
-  courseTerm: "",
-  courseLevel: "",
-  courseStartDate: "",
-  courseEndDate: "",
-  creditsEarned: "",
-  grade: "",
-  gradeScale: "",
-  result: "",
-  courseStatus: "",
-  courseSummary: "",
-  skillNames: "",
-  skillCodes: "",
-  skillFramework: "",
-  skillProficiencyLevels: "",
-  instructorName: "",
-  department: "",
-  attendancePercent: "",
-  abbreviations: "",
-  proficiencyLegend: "",
-  remarks: "",
-};
-
-const normalizedHeaderMap = new Map(
-  bulkImportColumns.map((column) => [normalizeHeader(column.key), column.key]),
-);
-
-function normalizeHeader(value: string) {
-  return value.replace(/([a-z])([A-Z])/g, "$1_$2").toLowerCase().replace(/[^a-z0-9]+/g, "_");
-}
-
-function asString(value: unknown) {
-  if (value == null) {
-    return "";
-  }
-
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? String(value) : "";
-  }
-
-  if (value instanceof Date && !Number.isNaN(value.getTime())) {
-    return value.toISOString().slice(0, 10);
-  }
-
-  return String(value).trim();
-}
-
 function splitSkills(value: string) {
   return value
     .split("|")
@@ -593,95 +507,6 @@ function makeIssuer(settings: BulkGlobalSettings) {
   };
 }
 
-function rowToObject(row: BulkImportRow) {
-  return bulkImportColumns.reduce<Record<string, string>>((result, column) => {
-    result[column.key] = row[column.key];
-    return result;
-  }, {});
-}
-
-function inferSheetName(workbook: XLSX.WorkBook) {
-  for (const sheetName of workbook.SheetNames) {
-    const sheet = workbook.Sheets[sheetName];
-    const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
-      defval: "",
-    });
-
-    if (rows.length === 0) {
-      continue;
-    }
-
-    const headers = Object.keys(rows[0] ?? {}).map(normalizeHeader);
-    const hasLearnerKey = headers.includes(normalizeHeader("learnerId"));
-    const hasCourseCode = headers.includes(normalizeHeader("courseCode"));
-    const hasCourseTitle = headers.includes(normalizeHeader("courseTitle"));
-
-    if (hasLearnerKey && hasCourseCode && hasCourseTitle) {
-      return sheetName;
-    }
-  }
-
-  return undefined;
-}
-
-function mapRawRow(input: Record<string, unknown>) {
-  const row = { ...emptyBulkImportRow };
-
-  for (const [key, value] of Object.entries(input)) {
-    const resolvedKey = normalizedHeaderMap.get(normalizeHeader(key));
-    if (!resolvedKey) {
-      continue;
-    }
-
-    row[resolvedKey] = asString(value);
-  }
-
-  if (!row.fullName && (row.givenName || row.familyName)) {
-    row.fullName = [row.givenName, row.familyName].filter(Boolean).join(" ");
-  }
-
-  if (!row.learnerId && row.studentNumber) {
-    row.learnerId = slugify(row.studentNumber);
-  }
-
-  if (!row.recordId) {
-    row.recordId = makeRecordId(
-      row.learnerId || row.studentNumber || row.fullName || "learner-record",
-    );
-  }
-
-  if (!row.verificationUrl && row.studentNumber) {
-    row.verificationUrl = `https://bulk.import.local/clr/${slugify(row.studentNumber)}`;
-  }
-
-  const normalizedType = normalizeTranscriptEntryType(row.credentialType);
-  row.credentialType = normalizedType ?? row.credentialType.trim().toLowerCase();
-
-  return row;
-}
-
-function isBlankRow(row: BulkImportRow) {
-  return Object.values(row).every((value) => value === "");
-}
-
-function validateRow(row: BulkImportRow, rowNumber: number) {
-  const issues: string[] = [];
-
-  for (const column of bulkImportColumns) {
-    if (column.required && !row[column.key]) {
-      issues.push(`Row ${rowNumber}: "${column.key}" is required.`);
-    }
-  }
-
-  if (row.credentialType && !normalizeTranscriptEntryType(row.credentialType)) {
-    issues.push(
-      `Row ${rowNumber}: "credentialType" must be one of ${transcriptEntryTypes.join(", ")}.`,
-    );
-  }
-
-  return issues;
-}
-
 function buildProfileSummary(rows: BulkImportRow[]) {
   const manual = rows.find((row) => row.learnerProfileSummary)?.learnerProfileSummary.trim();
   if (manual) {
@@ -739,8 +564,8 @@ function buildBulkClrPayload(rows: BulkImportRow[], settings: BulkGlobalSettings
         .map((row) => row.courseEndDate || row.courseStartDate)
         .filter(Boolean)
         .sort()
-        .at(-1) ?? new Date().toISOString(),
-    ) ?? new Date().toISOString();
+        .at(-1) ?? fallbackIssuedIsoDate,
+    ) ?? fallbackIssuedIsoDate;
 
   return {
     "@context": CONTEXT_URLS,
@@ -1582,65 +1407,6 @@ export function createSampleBulkRows(learnerCount = sampleLearnerCount) {
   }
 
   return rows;
-}
-
-export function createSampleBulkCsv(learnerCount = sampleLearnerCount) {
-  const worksheet = XLSX.utils.json_to_sheet(
-    createSampleBulkRows(learnerCount).map((row) => rowToObject(row)),
-  );
-  return XLSX.utils.sheet_to_csv(worksheet);
-}
-
-export function createSampleBulkWorkbook(learnerCount = sampleLearnerCount) {
-  const workbook = XLSX.utils.book_new();
-  const importRows = createSampleBulkRows(learnerCount).map((row) => rowToObject(row));
-  const importSheet = XLSX.utils.json_to_sheet(importRows);
-  const instructionsSheet = XLSX.utils.json_to_sheet(
-    bulkImportColumns.map((column) => ({
-      column: column.key,
-      required: column.required ? "Yes" : "No",
-      description: column.description,
-    })),
-  );
-
-  XLSX.utils.book_append_sheet(workbook, instructionsSheet, "instructions");
-  XLSX.utils.book_append_sheet(workbook, importSheet, "bulk_clr_import");
-
-  return XLSX.write(workbook, { type: "array", bookType: "xlsx" });
-}
-
-export function parseBulkWorkbook(buffer: ArrayBuffer): BulkParseResult {
-  const workbook = XLSX.read(buffer, { type: "array" });
-  const sheetName = inferSheetName(workbook);
-
-  if (!sheetName) {
-    throw new Error(
-      "No import sheet was found. Use the downloaded template so the upload contains learnerId, courseCode, and courseTitle columns.",
-    );
-  }
-
-  const sheet = workbook.Sheets[sheetName];
-  const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
-    defval: "",
-  });
-  const rows: BulkImportRow[] = [];
-  const warnings: string[] = [];
-
-  rawRows.forEach((entry, index) => {
-    const row = mapRawRow(entry);
-    if (isBlankRow(row)) {
-      return;
-    }
-
-    warnings.push(...validateRow(row, index + 2));
-    rows.push(row);
-  });
-
-  if (rows.length === 0) {
-    throw new Error("The uploaded file did not contain any learner credential rows.");
-  }
-
-  return { rows, warnings, sheetName };
 }
 
 export function groupBulkImportRows(rows: BulkImportRow[]) {

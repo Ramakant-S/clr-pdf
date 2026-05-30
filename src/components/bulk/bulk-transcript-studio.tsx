@@ -13,9 +13,7 @@ import { TranscriptPreview } from "@/components/transcript/transcript-preview";
 import {
   buildBulkLearnerRecord,
   buildBulkTranscriptCustomization,
-  createSampleBulkCsv,
   createSampleBulkRows,
-  createSampleBulkWorkbook,
   defaultBulkGlobalSettings,
   groupBulkImportRows,
   type BulkGeneratedLearnerRecord,
@@ -28,9 +26,6 @@ import { transcriptTemplateOptions } from "@/lib/transcript/templates";
 import styles from "./bulk-transcript-studio.module.css";
 
 const SETTINGS_STORAGE_KEY = "clr-bulk-global-settings";
-const csvMimeType = "text/csv;charset=utf-8;";
-const workbookMimeType =
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 const sampleLearnerCount = 10;
 const bulkDemoOnly = true;
 const premiumPlanMessage =
@@ -381,32 +376,6 @@ export function BulkTranscriptStudio() {
     setErrorMessage("");
     resetGeneratedOutput(
       `Loaded ${sampleLearnerCount} sample learners for the view-only demo preview.`,
-    );
-  }
-
-  function handleDownloadCsvTemplate() {
-    if (bulkDemoOnly) {
-      setErrorMessage(premiumPlanMessage);
-      return;
-    }
-
-    downloadBlob(
-      new Blob([createSampleBulkCsv(sampleLearnerCount)], { type: csvMimeType }),
-      "bulk-clr-import-sample.csv",
-    );
-  }
-
-  function handleDownloadExcelTemplate() {
-    if (bulkDemoOnly) {
-      setErrorMessage(premiumPlanMessage);
-      return;
-    }
-
-    downloadBlob(
-      new Blob([createSampleBulkWorkbook(sampleLearnerCount)], {
-        type: workbookMimeType,
-      }),
-      "bulk-clr-import-template.xlsx",
     );
   }
 
@@ -923,7 +892,6 @@ export function BulkTranscriptStudio() {
               <button
                 type="button"
                 className={styles.primaryAction}
-                onClick={handleDownloadExcelTemplate}
                 disabled
               >
                 Excel Template Locked
@@ -931,7 +899,6 @@ export function BulkTranscriptStudio() {
               <button
                 type="button"
                 className={styles.secondaryAction}
-                onClick={handleDownloadCsvTemplate}
                 disabled
               >
                 CSV Sample Locked

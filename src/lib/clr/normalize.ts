@@ -78,6 +78,7 @@ const defaultLearnerGradeLevel = "Undergraduate Year 2";
 const defaultLearnerHomeroom = "CS-2A";
 const defaultCredentialCredits = 1;
 const defaultProficiencyLevels = ["Beginning", "Developing", "Proficient", "Advanced"] as const;
+const fallbackIssuedIsoDate = "2026-05-31T00:00:00.000Z";
 
 function isRecord(value: unknown): value is JsonRecord {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
@@ -154,11 +155,25 @@ function formatDate(value: unknown): string | undefined {
     return undefined;
   }
 
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(date);
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = monthNames[date.getUTCMonth()];
+  const year = date.getUTCFullYear();
+
+  return `${day} ${month} ${year}`;
 }
 
 function makeFallbackStudentId(seed: string): string {
@@ -922,7 +937,7 @@ export function normalizeClrDocument(
   const issuedOn =
     formatDate(
       pickString(payload.validFrom, payload.issuanceDate, payload.awardedDate, courses.at(-1)?.endDate),
-    ) ?? formatDate(new Date().toISOString())!;
+    ) ?? formatDate(fallbackIssuedIsoDate)!;
   const modelHints = uniqueStrings([
     ...readTypeList(payload),
     ...embeddedCredentials.flatMap((credential) => readTypeList(credential)),
