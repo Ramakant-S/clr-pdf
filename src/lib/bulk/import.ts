@@ -25,6 +25,7 @@ export interface BulkGlobalSettings {
   principalName: string;
   reportingPeriodLabel: string;
   sealText: string;
+  logoDataUrl: string;
   footerText: string;
   template: TranscriptTemplate;
 }
@@ -142,6 +143,7 @@ export const defaultBulkGlobalSettings: BulkGlobalSettings = {
   principalName: defaultTranscriptCustomization.principalName,
   reportingPeriodLabel: defaultTranscriptCustomization.reportingPeriodLabel,
   sealText: defaultTranscriptCustomization.sealText,
+  logoDataUrl: defaultTranscriptCustomization.logoDataUrl,
   footerText: defaultTranscriptCustomization.footerText,
   template: defaultTranscriptCustomization.template,
 };
@@ -1705,6 +1707,7 @@ export function buildBulkTranscriptCustomization(
     programName: "",
     studentNumber: "",
     sealText: settings.sealText,
+    logoDataUrl: settings.logoDataUrl,
     homeroom: "",
     footerText: settings.footerText,
     template: settings.template,

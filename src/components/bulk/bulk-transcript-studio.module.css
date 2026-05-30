@@ -404,6 +404,10 @@
   gap: 4px;
 }
 
+.logoField {
+  grid-column: 1 / -1;
+}
+
 .field label {
   font-size: 0.8125rem;
   font-weight: 600;
@@ -430,6 +434,21 @@
 .textarea {
   min-height: 72px;
   resize: vertical;
+}
+
+.logoUploadStatus {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+  padding: 5px 8px;
+  border: 1px solid rgba(47, 107, 85, 0.14);
+  border-radius: 12px;
+  background: rgba(47, 107, 85, 0.08);
+  color: #2f6b55;
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 
 .actions {

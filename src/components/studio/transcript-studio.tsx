@@ -1,6 +1,6 @@
 "use client";
 
-import { startTransition, useRef } from "react";
+import { startTransition, useRef, type ChangeEvent } from "react";
 import { downloadTranscriptPdf } from "@/lib/transcript/pdf";
 import { getDemoClrPayload } from "@/lib/clr/normalize";
 import { StudioSwitcher } from "@/components/navigation/studio-switcher";
@@ -27,6 +27,7 @@ function makeFilename(name: string) {
 export function TranscriptStudio() {
   const dispatch = useAppDispatch();
   const previewRef = useRef<HTMLDivElement | null>(null);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
   const [normalizeClr, { isLoading }] = useNormalizeClrMutation();
   const { mode, url, jsonInput, transcript, custom, errorMessage } =
     useAppSelector((state) => state.transcript);
@@ -87,6 +88,52 @@ export function TranscriptStudio() {
     dispatch(setMode("url"));
     dispatch(setUrl(`${origin}/api/clr/demo`));
     dispatch(setErrorMessage(""));
+  }
+
+  function handleLogoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const isSupportedLogo =
+      file.type === "image/png" ||
+      file.type === "image/svg+xml" ||
+      /\.(png|svg)$/i.test(file.name);
+
+    if (!isSupportedLogo) {
+      dispatch(setErrorMessage("Upload a PNG or SVG logo file."));
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 1_500_000) {
+      dispatch(setErrorMessage("Logo file must be 1.5 MB or smaller."));
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        dispatch(setErrorMessage("Logo file could not be read."));
+        return;
+      }
+
+      dispatch(setCustomField({ key: "logoDataUrl", value: reader.result }));
+      dispatch(setErrorMessage(""));
+    };
+    reader.onerror = () => {
+      dispatch(setErrorMessage("Logo file could not be read."));
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearLogoUpload() {
+    dispatch(setCustomField({ key: "logoDataUrl", value: "" }));
+    if (logoInputRef.current) {
+      logoInputRef.current.value = "";
+    }
   }
 
   return (
@@ -243,6 +290,32 @@ export function TranscriptStudio() {
                 }
                 placeholder={transcript.institution.logoText}
               />
+            </div>
+
+            <div className={`${styles.field} ${styles.logoField}`}>
+              <label htmlFor="institution-logo">Institution Logo</label>
+              <input
+                ref={logoInputRef}
+                id="institution-logo"
+                className={styles.input}
+                type="file"
+                accept="image/png,image/svg+xml,.png,.svg"
+                onChange={handleLogoUpload}
+              />
+              {custom.logoDataUrl ? (
+                <div className={styles.logoUploadStatus}>
+                  <span>Custom logo active</span>
+                  <button
+                    type="button"
+                    className={styles.inlineAction}
+                    onClick={clearLogoUpload}
+                  >
+                    Clear
+                  </button>
+                </div>
+              ) : (
+                <p className={styles.hint}>PNG or SVG, up to 1.5 MB.</p>
+              )}
             </div>
 
             <div className={styles.field}>

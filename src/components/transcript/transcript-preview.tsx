@@ -257,6 +257,12 @@ export function TranscriptPreview({
     institutionName,
     institutionWebsite,
   );
+  const uploadedLogoDataUrl = customization.logoDataUrl.trim();
+  const logoSrc = uploadedLogoDataUrl || (useInstitutionLogo ? defaultInstitutionBranding.logoPath : "");
+  const hasBrandLogo = Boolean(logoSrc);
+  const logoAlt = uploadedLogoDataUrl
+    ? `${institutionName} logo`
+    : "Goa Tech Institute logo";
   const footerText =
     customization.footerText.trim() ||
     `${institutionName} | Official academic record prepared from CLR data`;
@@ -287,6 +293,7 @@ export function TranscriptPreview({
     customization.institutionName,
     customization.institutionAddress,
     customization.institutionWebsite,
+    customization.logoDataUrl,
     customization.boardName,
     customization.studentNumber,
     customization.programName,
@@ -444,6 +451,7 @@ export function TranscriptPreview({
     customization.institutionName,
     customization.institutionAddress,
     customization.institutionWebsite,
+    customization.logoDataUrl,
     customization.boardName,
     customization.studentNumber,
     customization.programName,
@@ -504,20 +512,21 @@ export function TranscriptPreview({
       <section className={styles.sheet} data-transcript-page>
         <header className={styles.sheetHeader}>
           <div className={styles.brandBlock}>
-            {useInstitutionLogo ? (
+            {hasBrandLogo ? (
               <Image
-                src={defaultInstitutionBranding.logoPath}
-                alt="Goa Tech Institute logo"
+                src={logoSrc}
+                alt={logoAlt}
                 className={styles.brandLogo}
                 width={148}
                 height={44}
+                unoptimized={Boolean(uploadedLogoDataUrl)}
                 priority
               />
             ) : (
               <div className={styles.seal}>{sealText}</div>
             )}
             <div className={styles.brandCopy}>
-              {!useInstitutionLogo ? (
+              {!hasBrandLogo ? (
                 <p className={styles.institutionName}>{institutionName}</p>
               ) : null}
               {institutionLines.length > 0 ? (
@@ -754,19 +763,20 @@ export function TranscriptPreview({
             <section className={styles.sheet}>
               <header className={styles.sheetHeader}>
                 <div className={styles.brandBlock}>
-                  {useInstitutionLogo ? (
+                  {hasBrandLogo ? (
                     <Image
-                      src={defaultInstitutionBranding.logoPath}
+                      src={logoSrc}
                       alt=""
                       className={styles.brandLogo}
                       width={148}
                       height={44}
+                      unoptimized={Boolean(uploadedLogoDataUrl)}
                     />
                   ) : (
                     <div className={styles.seal}>{sealText}</div>
                   )}
                   <div className={styles.brandCopy}>
-                    {!useInstitutionLogo ? (
+                    {!hasBrandLogo ? (
                       <p className={styles.institutionName}>{institutionName}</p>
                     ) : null}
                     {institutionLines.length > 0 ? (

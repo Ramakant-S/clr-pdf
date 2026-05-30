@@ -153,6 +153,7 @@ export interface TranscriptCustomization {
   programName: string;
   studentNumber: string;
   sealText: string;
+  logoDataUrl: string;
   homeroom: string;
   footerText: string;
   template: TranscriptTemplate;

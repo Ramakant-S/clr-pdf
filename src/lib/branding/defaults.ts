@@ -28,6 +28,7 @@ export const defaultTranscriptCustomization: TranscriptCustomization = {
   programName: "",
   studentNumber: "",
   sealText: defaultInstitutionBranding.sealText,
+  logoDataUrl: "",
   homeroom: "",
   footerText: defaultInstitutionBranding.footerText,
   template: "heritage",

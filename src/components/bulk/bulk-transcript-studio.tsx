@@ -1,6 +1,12 @@
 "use client";
 
-import { startTransition, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import JSZip from "jszip";
 import { StudioSwitcher } from "@/components/navigation/studio-switcher";
 import { TranscriptPreview } from "@/components/transcript/transcript-preview";
@@ -151,6 +157,7 @@ function migrateBulkSettings(
 
 export function BulkTranscriptStudio() {
   const previewRef = useRef<HTMLDivElement | null>(null);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
   const generationRunRef = useRef(0);
   const [settings, setSettings] = useState<BulkGlobalSettings>(
     defaultBulkGlobalSettings,
@@ -288,6 +295,52 @@ export function BulkTranscriptStudio() {
       [key]: value,
     }));
     setSettingsRevision((current) => current + 1);
+  }
+
+  function handleLogoUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    const isSupportedLogo =
+      file.type === "image/png" ||
+      file.type === "image/svg+xml" ||
+      /\.(png|svg)$/i.test(file.name);
+
+    if (!isSupportedLogo) {
+      setErrorMessage("Upload a PNG or SVG logo file.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 1_500_000) {
+      setErrorMessage("Logo file must be 1.5 MB or smaller.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") {
+        setErrorMessage("Logo file could not be read.");
+        return;
+      }
+
+      updateSetting("logoDataUrl", reader.result);
+      setErrorMessage("");
+    };
+    reader.onerror = () => {
+      setErrorMessage("Logo file could not be read.");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function clearLogoUpload() {
+    updateSetting("logoDataUrl", "");
+    if (logoInputRef.current) {
+      logoInputRef.current.value = "";
+    }
   }
 
   function resetGeneratedOutput(nextMessage = "") {
@@ -726,6 +779,31 @@ export function BulkTranscriptStudio() {
                         updateSetting("sealText", event.target.value)
                       }
                     />
+                  </div>
+                  <div className={`${styles.field} ${styles.logoField}`}>
+                    <label htmlFor="bulk-institution-logo">Institution Logo</label>
+                    <input
+                      ref={logoInputRef}
+                      id="bulk-institution-logo"
+                      className={styles.input}
+                      type="file"
+                      accept="image/png,image/svg+xml,.png,.svg"
+                      onChange={handleLogoUpload}
+                    />
+                    {settings.logoDataUrl ? (
+                      <div className={styles.logoUploadStatus}>
+                        <span>Custom logo active</span>
+                        <button
+                          type="button"
+                          className={styles.inlineAction}
+                          onClick={clearLogoUpload}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    ) : (
+                      <p className={styles.hint}>PNG or SVG, up to 1.5 MB.</p>
+                    )}
                   </div>
                   <div className={styles.field}>
                     <label htmlFor="bulk-board-name">Board / Authority</label>
